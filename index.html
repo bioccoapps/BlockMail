@@ -3145,17 +3145,22 @@
 
             let innerTag = '';
             if (seg.type === 'gif') {
-              // CÁLCULO PROPORCIONAL: Así forzamos a Gmail a respetar el alto sin importar si se achica
-              const targetH = seg.h;
-              const ratioPct = ((targetH / seg.w) * 100).toFixed(4);
+              const targetH = seg.h; 
               
-              // VML para Outlook (escritorio)
-              const vmlCode = `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:${seg.w}px;height:${targetH}px;"><v:fill type="frame" src="${seg.src}" /></v:rect><![endif]-->`;
+              // Contenedor Inteligente que usa aspect-ratio para achicarse sin dejar espacios vacíos
+              const wrapperStyle = `display:block; width:100%; max-width:${seg.w}px; max-height:${targetH}px; aspect-ratio:${seg.w}/${targetH}; overflow:hidden; margin:0 auto;`;
               
-              // CSS Background Fluido para Web/Mobile (Gmail no lo borra y recorta perfecto)
-              const fluidDiv = `<!--[if !mso]><!--><div style="display:block; width:100%; height:0; padding-bottom:${ratioPct}%; background-image:url('${seg.src}'); background-size:cover; background-position:center; background-repeat:no-repeat; margin:0 auto; overflow:hidden;"></div><!--<![endif]-->`;
+              // Imagen clásica (asegura reproducción del GIF) configurada para recortar sus bordes
+              const imgStyle = `display:block; width:100%; min-height:100%; object-fit:cover; object-position:center; border:0; outline:none; text-decoration:none; margin:0; padding:0;`;
 
-              innerTag = vmlCode + fluidDiv;
+              // Renderizado seguro en Windows/Outlook usando VML
+              const vmlCode = `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:${seg.w}px;height:${targetH}px;"><v:fill type="frame" src="${seg.src}" /></v:rect><![endif]-->`;
+
+              // Renderizado para móviles, web y Apple usando el wrapper inteligente
+              const htmlCode = `<!--[if !mso]><!--><img src="${seg.src}" width="100%" style="${imgStyle}" alt="" /><!--<![endif]-->`;
+
+              innerTag = `<div style="${wrapperStyle}">${vmlCode}${htmlCode}</div>`;
+
             } else {
               const segB64 = sliceMasterCanvas(masterCanvas, scale, seg.x, band.top, seg.w, bandH);
               const segSrc = registerInlineImage(segB64);
