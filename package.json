@@ -1,0 +1,41 @@
+{
+  "name": "blockmail",
+  "version": "2.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "publish": "electron-builder --win -p always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.1.7"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.tuempresa.blockmail",
+    "productName": "BlockMail",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "app-logo.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "TU_USUARIO",
+        "repo": "TU_REPO"
+      }
+    ]
+  }
+}

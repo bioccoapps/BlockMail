@@ -1,0 +1,3322 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>BlockMail Editor</title>
+  <link rel="icon" type="image/x-icon" href="app-logo.ico">
+  <!-- GOOGLE FONTS & MATERIAL SYMBOLS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <style>
+    /* VARIABLES DE TEMAS: OSCURO (DEFAULT), GRIS Y CLARO */
+    :root, body[data-theme="dark"] {
+      --md-bg: #141517;
+      --md-surface: #1e1f22;
+      --md-surface-2: #2b2d31;
+      --md-surface-3: #35373c;
+      --md-primary: #0d99ff;
+      --md-primary-hover: #33abff;
+      --md-primary-container: rgba(13, 153, 255, 0.16);
+      --md-border: #383a40;
+      --md-text: #f2f3f5;
+      --md-text-muted: #949ba4;
+      --md-tab-bar: #111214;
+      --md-tab-inactive: #1a1b1e;
+      --md-radius: 8px;
+    }
+
+    body[data-theme="gray"] {
+      --md-bg: #2f3337;
+      --md-surface: #3b4045;
+      --md-surface-2: #484e54;
+      --md-surface-3: #555c63;
+      --md-primary: #0d99ff;
+      --md-primary-hover: #33abff;
+      --md-primary-container: rgba(13, 153, 255, 0.22);
+      --md-border: #606770;
+      --md-text: #f8f9fa;
+      --md-text-muted: #d0d5dd;
+      --md-tab-bar: #26292c;
+      --md-tab-inactive: #313539;
+    }
+
+    body[data-theme="light"] {
+      --md-bg: #e5e8ec;
+      --md-surface: #ffffff;
+      --md-surface-2: #f2f4f7;
+      --md-surface-3: #e4e7ec;
+      --md-primary: #0077e6;
+      --md-primary-hover: #005bb5;
+      --md-primary-container: rgba(0, 119, 230, 0.12);
+      --md-border: #d0d5dd;
+      --md-text: #1d2939;
+      --md-text-muted: #667085;
+      --md-tab-bar: #d5d9e0;
+      --md-tab-inactive: #e4e7ec;
+    }
+
+    body { 
+      font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      display: flex; 
+      flex-direction: column; 
+      height: 100vh; 
+      background-color: var(--md-bg); 
+      color: var(--md-text); 
+      overflow: hidden; 
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .ms-icon {
+      font-family: 'Material Symbols Rounded';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 19px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+      user-select: none;
+    }
+    
+    #topbar { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      background-color: var(--md-surface); 
+      padding: 10px 20px; 
+      border-bottom: 1px solid var(--md-border);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      z-index: 10001; 
+    }
+    
+    #tabs-bar { 
+      display: flex; 
+      background: var(--md-tab-bar); 
+      overflow-x: auto; 
+      border-bottom: 1px solid var(--md-border); 
+      z-index: 10000; 
+      padding: 4px 8px 0 8px;
+      gap: 4px;
+    }
+    
+    .tab { 
+      padding: 8px 14px; 
+      border-radius: 8px 8px 0 0;
+      border-top: 2px solid transparent; 
+      background: var(--md-tab-inactive); 
+      color: var(--md-text-muted); 
+      font-size: 12.5px; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      max-width: 240px; 
+      user-select: none; 
+      transition: all 0.15s ease;
+    }
+    .tab:hover { background: var(--md-surface-2); color: var(--md-text); }
+    .tab.active { 
+      background: var(--md-surface); 
+      color: var(--md-text); 
+      border-top-color: var(--md-primary); 
+      font-weight: 600;
+    }
+    
+    .tab-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tab-close { background: none; border: none; color: var(--md-text-muted); font-size: 13px; cursor: pointer; padding: 2px 5px; border-radius: 50%; outline: none; transition: background 0.15s; }
+    .tab-close:hover { background: rgba(128,128,128,0.2); color: var(--md-text); }
+
+    #main-area { display: flex; flex: 1; overflow: hidden; }
+    
+    #canvas-container { 
+      flex: 1; overflow: auto; padding: 45px 40px; position: relative; transition: background-color 0.3s; 
+    }
+    
+    /* LIENZO: FONDO GRIS PARA DIFERENCIAR ESPACIOS ENTRE COLUMNAS EN EL EDITOR */
+    #newsletter-canvas { 
+      width: 850px; margin: 0 auto; flex-shrink: 0; min-height: 800px; 
+      background-color: #d1d5db; box-shadow: 0 8px 28px rgba(0,0,0,0.35); 
+      position: relative; transition: transform 0.3s ease; transform-origin: top center; 
+    }
+
+    #canvas-guides {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+      pointer-events: none; z-index: 1; 
+    }
+    body.col-edit-mode #canvas-guides {
+      pointer-events: auto;
+      z-index: 9500;
+    }
+
+    /* LÍNEA INDICADORA DE INSERCIÓN AL ARRASTRAR BLOQUES */
+    #insertion-guide {
+      position: absolute;
+      left: 0;
+      width: 850px;
+      height: 3px;
+      background: var(--md-primary);
+      box-shadow: 0 0 10px var(--md-primary), 0 0 4px #ffffff;
+      pointer-events: none;
+      display: none;
+      z-index: 9200;
+      transition: top 0.1s ease;
+    }
+    #insertion-guide::before {
+      content: ' Soltá o mantené 1s para insertar acá ';
+      position: absolute;
+      right: 12px;
+      top: -22px;
+      background: var(--md-primary);
+      color: #fff;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    /* ESTILOS DE EDICIÓN INTERACTIVA DE COLUMNAS EN MESA DE TRABAJO */
+    .col-band {
+      position: absolute; top: 0; bottom: 0;
+      background-color: #ffffff;
+      box-shadow: 0 0 4px rgba(0,0,0,0.06);
+      transition: background-color 0.15s, outline 0.15s;
+    }
+    body.col-edit-mode .col-band {
+      cursor: pointer;
+    }
+    body.col-edit-mode .col-band:hover {
+      background-color: #f0f8ff;
+      outline: 2px dashed var(--md-primary);
+    }
+    body.col-edit-mode .col-band.selected-col {
+      background-color: #e6f4ff;
+      outline: 2px solid var(--md-primary);
+      z-index: 2;
+    }
+    .col-badge {
+      display: none;
+      position: sticky;
+      top: 10px;
+      margin: 10px auto 0 auto;
+      width: fit-content;
+      background: var(--md-surface);
+      color: var(--md-text);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--md-primary);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+      pointer-events: none;
+    }
+    body.col-edit-mode .col-badge { display: block; }
+    body.col-edit-mode .col-band.selected-col .col-badge {
+      background: var(--md-primary);
+      color: #fff;
+    }
+
+    /* NODOS ARRASTRABLES DE COLUMNA EN EL LIENZO */
+    .col-node-handle {
+      display: none;
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 14px;
+      margin-left: -7px;
+      cursor: ew-resize;
+      z-index: 10;
+      align-items: center;
+      justify-content: center;
+    }
+    body.col-edit-mode .col-node-handle { display: flex; }
+    .col-node-pill {
+      width: 14px;
+      height: 44px;
+      background: var(--md-primary);
+      border: 2px solid #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 10px;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .col-node-handle:hover .col-node-pill {
+      transform: scale(1.15);
+      background: var(--md-primary-hover);
+    }
+    
+    #selection-box { position: absolute; border: 1.5px solid var(--md-primary); background-color: rgba(13, 153, 255, 0.18); display: none; pointer-events: none; z-index: 9999; border-radius: 4px; }
+    
+    #sidebar { 
+      width: 330px; background-color: var(--md-surface); border-left: 1px solid var(--md-border); padding: 20px; 
+      display: flex; flex-direction: column; overflow-y: auto; z-index: 10000; flex-shrink: 0; 
+    }
+    
+    h2 { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0; margin-bottom: 14px; color: var(--md-text-muted); }
+    
+    /* BOTONES MATERIAL DESIGN 3 */
+    .tool-btn { 
+      background-color: var(--md-surface-2); 
+      color: var(--md-text); 
+      border: 1px solid var(--md-border); 
+      padding: 10px 14px; 
+      margin-bottom: 8px; 
+      border-radius: var(--md-radius); 
+      cursor: pointer; 
+      font-size: 13.5px; 
+      font-weight: 500;
+      font-family: inherit;
+      display: flex; 
+      align-items: center; 
+      gap: 10px;
+      justify-content: flex-start; 
+      transition: all 0.18s cubic-bezier(0.2, 0, 0, 1); 
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .tool-btn:hover { 
+      background-color: var(--md-surface-3); 
+      border-color: var(--md-primary);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .tool-btn:active {
+      transform: translateY(0);
+    }
+    .tool-btn.active-mode {
+      background-color: var(--md-primary) !important;
+      border-color: var(--md-primary-hover) !important;
+      color: #fff !important;
+      box-shadow: 0 0 12px rgba(13, 153, 255, 0.45);
+    }
+    
+    .btn-icon { width: 18px; height: 18px; object-fit: contain; }
+    
+    .top-btn { 
+      background-color: var(--md-surface-2); 
+      color: var(--md-text); 
+      border-color: var(--md-border); 
+      margin: 0; 
+      padding: 8px 14px; 
+      font-weight: 600; 
+      justify-content: center; 
+      gap: 6px;
+    }
+    .top-btn:hover { background-color: var(--md-surface-3); color: var(--md-text); }
+
+    #properties-panel, #column-properties-panel { 
+      background-color: var(--md-surface-2); 
+      padding: 16px; 
+      margin-top: 16px; 
+      display: none; 
+      border: 1px solid var(--md-border); 
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    #multi-select-msg { display: none; color: var(--md-primary); font-size: 12.5px; text-align: center; margin-bottom: 10px; background: var(--md-primary-container); padding: 10px; border-radius: 6px; font-weight: 500; }
+    #single-properties { display: block; }
+    
+    .align-group { display: flex; gap: 6px; margin-bottom: 14px; }
+    .align-btn { flex: 1; text-align: center; padding: 7px 0; margin-bottom: 0; font-size: 15px; font-weight: 600; background-color: var(--md-surface); border-color: var(--md-border); justify-content: center; gap: 0; }
+    .align-btn:hover { background-color: var(--md-surface-3); border-color: var(--md-primary); }
+    
+    .prop-row { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+    .prop-row label { font-size: 12.5px; color: var(--md-text-muted); font-weight: 500; }
+    
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    
+    .num-wrap { position: relative; width: 82px; display: flex; background: var(--md-surface); border: 1px solid var(--md-border); border-radius: 6px; overflow: hidden; }
+    .num-wrap input { width: 100%; border: none; background: transparent; color: var(--md-text); padding: 5px 22px 5px 6px; text-align: right; outline: none; font-family: inherit; font-size: 13px; }
+    .num-arrows { position: absolute; right: 0; top: 0; bottom: 0; width: 18px; background: var(--md-surface-3); display: flex; flex-direction: column; border-left: 1px solid var(--md-border); }
+    .num-arr { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--md-text); cursor: pointer; user-select: none; }
+    .num-arr:hover { background: var(--md-primary); color: #fff; }
+    .num-arr.up { border-bottom: 1px solid var(--md-border); }
+
+    #media-properties, #text-props { margin-top: 15px; border-top: 1px solid var(--md-border); padding-top: 15px; display: none; }
+    .media-input { width: 100%; box-sizing: border-box; background: var(--md-surface); border: 1px solid var(--md-border); color: var(--md-text); padding: 8px 10px; border-radius: 6px; margin-top: 5px; outline: none; font-family: inherit; }
+    .media-input:focus { border-color: var(--md-primary); }
+    
+    .text-prop-box { display: flex; align-items: center; background: var(--md-surface); border: 1px solid var(--md-border); border-radius: 6px; padding: 0 8px; height: 34px; }
+    .text-prop-box input { width: 100%; border: none; background: transparent; color: var(--md-text); outline: none; text-align: right; font-size: 13px; font-family: inherit; }
+    
+    .swatch { width: 22px; height: 22px; border-radius: 4px; cursor: pointer; border: 1px solid rgba(128,128,128,0.4); transition: transform 0.12s; }
+    .swatch:hover { transform: scale(1.15); border-color: var(--md-primary); }
+
+    /* BLOQUES DEL LIENZO CON TRANSICIÓN SUAVE AL DESPLAZARSE */
+    .block { 
+      position: absolute; 
+      background-color: #fcfcfc; 
+      box-sizing: border-box; 
+      min-width: 20px; 
+      min-height: 10px; 
+      cursor: grab; 
+      z-index: 10; 
+      transition: top 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), left 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .block.dragging { 
+      cursor: grabbing; 
+      z-index: 8000 !important; 
+      opacity: 0.88; 
+      box-shadow: 0 16px 34px rgba(0,0,0,0.45); 
+      transform: scale(1.015); 
+      transition: none !important;
+    }
+    .block.resizing {
+      transition: none !important;
+    }
+    .block.selected { border: 2px solid var(--md-primary); z-index: 50; }
+    .block:not(.selected) { border: 1px dashed #b0b5bc; }
+    
+    .block-content { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; box-sizing: border-box; color: #666; text-align: center; padding: 0px; pointer-events: none; overflow: hidden; user-select: none; background-color: #fcfcfc; }
+    .bg-image { background-color: #e0e0e0; } 
+    .bg-gif { background-color: #fcfcfc; } 
+    .bg-spacer { background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 10px, #fcfcfc 10px, #fcfcfc 20px); }
+    
+    .block-text { width: 100%; height: 100%; box-sizing: border-box; cursor: default; overflow: hidden; pointer-events: none; user-select: none; background-color: #fcfcfc !important; color: #000000; }
+    .block-text.editing { cursor: text; pointer-events: auto; outline: none; border: 1px dashed var(--md-primary); user-select: text; }
+    .block-text * { font-family: inherit !important; font-size: inherit !important; line-height: inherit !important; margin: 0 !important; padding: 0 !important; }
+    
+    .delete-btn { position: absolute; top: -12px; right: -12px; background: #e74c3c; color: white; border: 2px solid #fff; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; z-index: 200; pointer-events: auto; font-size: 11px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+    .block.selected .delete-btn { display: flex; align-items: center; justify-content: center; }
+    
+    .resize-handle { position: absolute; width: 11px; height: 11px; background-color: var(--md-primary); border: 2px solid #fff; border-radius: 50%; display: none; z-index: 150; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+    body.single-selection .block.selected .resize-handle { display: block; }
+    
+    #multi-selection-box { position: absolute; border: 1.5px dashed var(--md-primary); background: rgba(13,153,255,0.05); display: none; pointer-events: none; z-index: 5000; }
+    .multi-handle { position: absolute; width: 10px; height: 10px; background-color: var(--md-primary); border: 1.5px solid #fff; border-radius: 50%; pointer-events: auto; display: none; z-index: 5005; }
+    body.multi-selection-active .multi-handle { display: block; }
+    
+    .mh-nw { top: -6px; left: -6px; cursor: nwse-resize; } .mh-ne { top: -6px; right: -6px; cursor: nesw-resize; } .mh-sw { bottom: -6px; left: -6px; cursor: nesw-resize; } .mh-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+    .nw { top: -7px; left: -7px; cursor: nwse-resize; } .n { top: -7px; left: calc(50% - 7px); cursor: ns-resize; } .ne { top: -7px; right: -7px; cursor: nesw-resize; } .e { top: calc(50% - 7px); right: -7px; cursor: ew-resize; } .se { bottom: -7px; right: -7px; cursor: nwse-resize; } .s { bottom: -7px; left: calc(50% - 7px); cursor: ns-resize; } .sw { bottom: -7px; left: -7px; cursor: nesw-resize; } .w { top: calc(50% - 7px); left: -7px; cursor: ew-resize; }
+
+    /* MODALES MATERIAL DESIGN */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); display: flex; justify-content: center; align-items: center; z-index: 100000; backdrop-filter: blur(6px); }
+    .modal-box { background: var(--md-surface); border: 1px solid var(--md-border); border-radius: 14px; padding: 32px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-width: 500px; width: 92%; max-height: 85vh; overflow-y: auto; color: var(--md-text); }
+    .modal-title { font-size: 20px; color: var(--md-text); margin-bottom: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .modal-text { font-size: 13.5px; color: var(--md-text-muted); margin-bottom: 24px; line-height: 1.5; word-wrap: break-word; }
+    
+    .update-details { text-align: left; background: var(--md-surface-2); padding: 15px; border-left: 3px solid var(--md-primary); border-radius: 6px; font-size: 12px; color: var(--md-text-muted); margin-bottom: 25px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(13, 153, 255, 0.3); border-top: 4px solid var(--md-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* SISTEMA DE NOTIFICACIONES Y CARTELES CON SALSA */
+    #salsa-toast-container {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 300000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+    .salsa-toast {
+      pointer-events: auto;
+      min-width: 320px;
+      max-width: 420px;
+      background: var(--md-surface);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--md-border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      color: var(--md-text);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 20px rgba(13, 153, 255, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+      animation: salsaSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .salsa-toast.hiding {
+      animation: salsaSlideOut 0.25s ease forwards;
+    }
+    .salsa-toast-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 24px;
+    }
+    .salsa-toast.success .salsa-toast-icon { background: rgba(46, 204, 113, 0.18); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.35); }
+    .salsa-toast.error .salsa-toast-icon { background: rgba(231, 76, 60, 0.18); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.35); }
+    .salsa-toast.info .salsa-toast-icon { background: rgba(13, 153, 255, 0.18); color: #0d99ff; border: 1px solid rgba(13, 153, 255, 0.35); }
+    .salsa-toast-body { flex: 1; display: flex; flex-direction: column; gap: 3px; text-align: left; }
+    .salsa-toast-title { font-size: 14px; font-weight: 700; color: var(--md-text); letter-spacing: 0.2px; }
+    .salsa-toast-msg { font-size: 12.5px; color: var(--md-text-muted); line-height: 1.4; }
+    .salsa-toast-close {
+      background: var(--md-surface-2);
+      border: none;
+      color: var(--md-text-muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    .salsa-toast-close:hover { background: var(--md-surface-3); color: var(--md-text); }
+    .salsa-toast-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 100%;
+      transform-origin: left;
+      animation: salsaProgress 3.6s linear forwards;
+    }
+    .salsa-toast.success .salsa-toast-bar { background: linear-gradient(90deg, #2ecc71, #1abc9c); }
+    .salsa-toast.error .salsa-toast-bar { background: linear-gradient(90deg, #e74c3c, #f39c12); }
+    .salsa-toast.info .salsa-toast-bar { background: linear-gradient(90deg, #0d99ff, #9b59b6); }
+
+    @keyframes salsaSlideIn {
+      0% { opacity: 0; transform: translateY(25px) scale(0.92); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes salsaSlideOut {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(15px) scale(0.95); }
+    }
+    @keyframes salsaProgress {
+      0% { transform: scaleX(1); }
+      100% { transform: scaleX(0); }
+    }
+
+    /* PANTALLA DE INICIO (HOME) */
+    #welcome-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--md-bg); display: flex; z-index: 100000; }
+    .ws-sidebar { width: 260px; background: var(--md-surface); padding: 40px 20px; border-right: 1px solid var(--md-border); display: flex; flex-direction: column; gap: 12px; }
+    .ws-sidebar h1 { margin: 0 0 28px 0; font-size: 20px; color: var(--md-text); display: flex; align-items: center; gap: 10px; }
+    .ws-btn-primary { background: var(--md-primary); color: #fff; border: none; border-radius: var(--md-radius); padding: 12px 18px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.15s; }
+    .ws-btn-primary:hover { background: var(--md-primary-hover); }
+    .ws-btn-secondary { background: var(--md-surface-2); color: var(--md-text); border: 1px solid var(--md-border); border-radius: var(--md-radius); padding: 12px 18px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.15s; }
+    .ws-btn-secondary:hover { background: var(--md-surface-3); }
+    .ws-main { flex: 1; padding: 50px; overflow-y: auto; background: var(--md-bg); }
+    .ws-title { font-size: 26px; font-weight: 600; margin-bottom: 36px; color: var(--md-text); }
+    .ws-recents-title { font-size: 12px; color: var(--md-text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--md-border); }
+    .recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 20px; }
+    .recent-card { background: var(--md-surface); border: 1px solid var(--md-border); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: all 0.2s; height: 205px; }
+    .recent-card:hover { transform: translateY(-3px); border-color: var(--md-primary); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+    .recent-thumb { height: 140px; background: var(--md-tab-bar); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--md-border); overflow: hidden; position: relative; }
+    .recent-info { padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+    .recent-name { font-size: 13px; font-weight: 600; color: var(--md-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent-date { font-size: 11px; color: var(--md-text-muted); }
+    
+    /* GRUPOS DESPLEGABLES (GUARDAR Y EXPORTAR) */
+    .save-group { display: flex; position: relative; }
+    .save-group-main { border-radius: var(--md-radius) 0 0 var(--md-radius); margin: 0; }
+    .save-group-arrow { margin: 0; padding: 8px 10px; border-left: none; background: var(--md-surface-2); color: var(--md-text); cursor: pointer; border: 1px solid var(--md-border); border-radius: 0 var(--md-radius) var(--md-radius) 0; transition: background 0.15s; }
+    .save-group-arrow:hover { background: var(--md-surface-3); }
+    
+    .dropdown-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--md-surface); border: 1px solid var(--md-border); border-radius: 10px; overflow: hidden; z-index: 20000; box-shadow: 0 10px 25px rgba(0,0,0,0.35); min-width: 195px; flex-direction: column; }
+    .dropdown-menu button { background: none; border: none; border-bottom: 1px solid var(--md-border); padding: 12px 16px; text-align: left; cursor: pointer; font-size: 13px; font-family: inherit; width: 100%; color: var(--md-text); font-weight: 600; display: flex; align-items: center; gap: 10px; transition: background 0.15s; }
+    .dropdown-menu button:last-child { border-bottom: none; }
+    .dropdown-menu button:hover { background: var(--md-primary); color: #fff; }
+
+    /* SELECTOR DE COLUMNAS Y TEMAS */
+    .grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
+    .grid-btn { 
+      background: var(--md-surface-2); 
+      color: var(--md-text); 
+      border: 2px solid var(--md-border); 
+      border-radius: 10px;
+      padding: 18px 12px; 
+      font-size: 14px; 
+      font-family: inherit;
+      cursor: pointer; 
+      font-weight: 600; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s; 
+    }
+    .grid-btn img { width: 42px; height: 42px; object-fit: contain; }
+    .grid-btn:hover, .grid-btn.active { border-color: var(--md-primary); background: var(--md-primary-container); color: var(--md-text); transform: translateY(-2px); }
+
+    .settings-section { text-align: left; background: var(--md-surface-2); border: 1px solid var(--md-border); border-radius: 10px; padding: 16px; margin-bottom: 18px; }
+    .settings-row { display: flex; justify-content: space-between; align-items: center; }
+    .settings-row label { font-size: 13.5px; color: var(--md-text); font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .settings-input { width: 90px; background: var(--md-surface); border: 1px solid var(--md-border); border-radius: 6px; color: var(--md-text); padding: 7px 10px; text-align: right; font-size: 13.5px; font-family: inherit; outline: none; }
+    .settings-input:focus { border-color: var(--md-primary); }
+  </style>
+</head>
+<body data-theme="dark" onclick="closeDropdowns()">
+
+  <!-- CONTENEDOR DE NOTIFICACIONES CON SALSA -->
+  <div id="salsa-toast-container"></div>
+
+  <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO -->
+  <div id="salsa-confirm-modal" class="modal-overlay" style="display: none; z-index: 250000;">
+    <div class="modal-box" style="max-width: 400px;">
+      <div class="modal-title"><span class="ms-icon" style="color:#f39c12; font-size:26px;">help</span> <span id="salsa-confirm-title">Confirmar acción</span></div>
+      <div class="modal-text" id="salsa-confirm-text">¿Estás seguro?</div>
+      <div style="display:flex; gap:10px;">
+        <button class="tool-btn" id="salsa-confirm-cancel" style="flex:1; justify-content:center; margin:0; background:var(--md-surface-2);">Cancelar</button>
+        <button class="tool-btn" id="salsa-confirm-ok" style="flex:1; justify-content:center; margin:0; background:#e74c3c; border-color:#c0392b; color:#fff; font-weight:600;"><span class="ms-icon">delete</span> Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CAMBIOS SIN GUARDAR -->
+  <div id="close-tab-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-title"><span class="ms-icon" style="color:#f1c40f; font-size:24px;">warning</span> Cambios sin guardar</div>
+      <div class="modal-text">Tenés cambios sin guardar en este proyecto. ¿Qué querés hacer antes de salir?</div>
+      <button class="tool-btn" style="width: 100%; justify-content: center; background-color: var(--md-primary); border-color: var(--md-primary); color:#fff; font-weight: 600; padding: 12px;" onclick="confirmClose(true)"><span class="ms-icon">save</span> Guardar y Salir</button>
+      <button class="tool-btn" style="width: 100%; justify-content: center; background-color: #e74c3c; border-color: #c0392b; color:#fff; font-weight: 600; padding: 12px; margin-top: 6px;" onclick="confirmClose(false)"><span class="ms-icon">delete_forever</span> Salir sin guardar</button>
+      <button class="tool-btn" style="width: 100%; justify-content: center; background: transparent; padding: 10px; margin-top: 12px;" onclick="document.getElementById('close-tab-modal').style.display='none'">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- MODAL NUEVA PLANTILLA CON ICONOS 1columna.ico .. 4columna.ico -->
+  <div id="new-project-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-title"><span class="ms-icon" style="color:var(--md-primary);">dashboard_customize</span> Nueva Plantilla</div>
+      <div class="modal-text">¿Con cuántas columnas querés empezar a diseñar tu grilla?</div>
+      <div class="grid-options">
+        <button class="grid-btn" onclick="createProject(1)">
+          <img src="1columna.ico" alt="1 Columna" onerror="this.outerHTML='<span class=\'ms-icon\' style=\'font-size:36px; color:#0d99ff;\'>view_day</span>'">
+          <span>1 Columna</span>
+        </button>
+        <button class="grid-btn" onclick="createProject(2)">
+          <img src="2columna.ico" alt="2 Columnas" onerror="this.outerHTML='<span class=\'ms-icon\' style=\'font-size:36px; color:#0d99ff;\'>view_column_2</span>'">
+          <span>2 Columnas</span>
+        </button>
+        <button class="grid-btn" onclick="createProject(3)">
+          <img src="3columna.ico" alt="3 Columnas" onerror="this.outerHTML='<span class=\'ms-icon\' style=\'font-size:36px; color:#0d99ff;\'>view_week</span>'">
+          <span>3 Columnas</span>
+        </button>
+        <button class="grid-btn" onclick="createProject(4)">
+          <img src="4columna.ico" alt="4 Columnas" onerror="this.outerHTML='<span class=\'ms-icon\' style=\'font-size:36px; color:#0d99ff;\'>calendar_view_week</span>'">
+          <span>4 Columnas</span>
+        </button>
+      </div>
+      <button class="tool-btn" style="width: 100%; justify-content: center; background: transparent; padding: 10px; margin-bottom:0;" onclick="document.getElementById('new-project-modal').style.display='none'">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE AJUSTES DE GRILLA Y TEMA DE INTERFAZ -->
+  <div id="grid-settings-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-title"><span class="ms-icon" style="color:var(--md-primary);">tune</span> Ajustes de BlockMail</div>
+      <div class="modal-text" style="margin-bottom: 16px;">Personalizá el tema visual de la app, la cantidad de columnas y el espacio uniforme entre ellas.</div>
+      
+      <!-- SELECTOR DE TEMA: CLARO, GRIS, OSCURO -->
+      <div style="text-align:left; font-size:12px; font-weight:700; color:var(--md-text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
+        Tema de la Interfaz
+      </div>
+      <div class="grid-options" style="grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px;">
+        <button class="grid-btn" id="theme-btn-light" style="padding:12px 6px; font-size:12.5px;" onclick="setAppTheme('light')">
+          <span class="ms-icon" style="font-size:24px; color:#f39c12;">light_mode</span>
+          <span>Modo Claro</span>
+        </button>
+        <button class="grid-btn" id="theme-btn-gray" style="padding:12px 6px; font-size:12.5px;" onclick="setAppTheme('gray')">
+          <span class="ms-icon" style="font-size:24px; color:#95a5a6;">contrast</span>
+          <span>Modo Gris</span>
+        </button>
+        <button class="grid-btn" id="theme-btn-dark" style="padding:12px 6px; font-size:12.5px;" onclick="setAppTheme('dark')">
+          <span class="ms-icon" style="font-size:24px; color:#0d99ff;">dark_mode</span>
+          <span>Modo Oscuro</span>
+        </button>
+      </div>
+
+      <div style="text-align:left; font-size:12px; font-weight:700; color:var(--md-text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
+        Columnas del Proyecto
+      </div>
+      <div class="grid-options" style="grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px;">
+        <button class="grid-btn" id="set-col-1" style="padding:12px 6px; font-size:12px;" onclick="changeSettingsColumns(1)">
+          <img src="1columna.ico" style="width:28px; height:28px;" alt="" onerror="this.outerHTML='<span class=\'ms-icon\'>view_day</span>'">
+          <span>1 Col</span>
+        </button>
+        <button class="grid-btn" id="set-col-2" style="padding:12px 6px; font-size:12px;" onclick="changeSettingsColumns(2)">
+          <img src="2columna.ico" style="width:28px; height:28px;" alt="" onerror="this.outerHTML='<span class=\'ms-icon\'>view_column_2</span>'">
+          <span>2 Col</span>
+        </button>
+        <button class="grid-btn" id="set-col-3" style="padding:12px 6px; font-size:12px;" onclick="changeSettingsColumns(3)">
+          <img src="3columna.ico" style="width:28px; height:28px;" alt="" onerror="this.outerHTML='<span class=\'ms-icon\'>view_week</span>'">
+          <span>3 Col</span>
+        </button>
+        <button class="grid-btn" id="set-col-4" style="padding:12px 6px; font-size:12px;" onclick="changeSettingsColumns(4)">
+          <img src="4columna.ico" style="width:28px; height:28px;" alt="" onerror="this.outerHTML='<span class=\'ms-icon\'>calendar_view_week</span>'">
+          <span>4 Col</span>
+        </button>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-row">
+          <label><span class="ms-icon" style="color:var(--md-primary);">space_bar</span> Espacio entre columnas (px)</label>
+          <input type="number" id="uniform-gap-input" class="settings-input" value="20" min="0" max="200">
+        </div>
+      </div>
+
+      <button class="tool-btn" style="width: 100%; justify-content: center; background-color: var(--md-primary); border-color: var(--md-primary); color:#fff; font-weight: 600; padding: 12px;" onclick="applyGridSettings()"><span class="ms-icon">check_circle</span> Aplicar Cambios</button>
+      <button class="tool-btn" style="width: 100%; justify-content: center; background: transparent; padding: 10px; margin-top: 5px; margin-bottom: 0;" onclick="document.getElementById('grid-settings-modal').style.display='none'">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- PANTALLA DE BIENVENIDA -->
+  <div id="welcome-screen">
+    <div class="ws-sidebar">
+      <h1><img src="app-logo.ico" style="width: 32px; height: 32px; object-fit: contain;" alt="" onerror="this.style.display='none'"> BlockMail <small id="ws-app-version" style="font-size: 12px; color: var(--md-text-muted); font-weight: normal;"></small></h1>
+      <button class="ws-btn-primary" onclick="showNewProjectModal()"><span class="ms-icon">add_box</span> Archivo nuevo</button>
+      <button class="ws-btn-secondary" onclick="triggerLoadProject()"><span class="ms-icon">folder_open</span> Abrir proyecto</button>
+      <button class="ws-btn-secondary" style="margin-top:auto;" onclick="openGridSettingsModal()"><span class="ms-icon">tune</span> Tema y Ajustes</button>
+    </div>
+    <div class="ws-main">
+      <div class="ws-title">Te damos la bienvenida a BlockMail 2.0</div>
+      <div class="ws-recents-title">Recientes (Últimos 10)</div>
+      <div class="recent-grid" id="recent-projects-grid"></div>
+    </div>
+  </div>
+
+  <!-- MODAL DE ACTUALIZACIÓN -->
+  <div id="update-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <div id="update-spinner" class="spinner"></div>
+      <div id="update-title" class="modal-title">¡Nueva actualización!</div>
+      <div id="update-text" class="modal-text">Descargando...</div>
+      <div id="update-details" class="update-details" style="display: none;"></div>
+      <button id="update-btn" class="tool-btn" style="width: 100%; justify-content: center; background-color: #1FAF38; border-color: #158a29; color:#fff; font-weight: bold; padding: 15px; display: none;" onclick="restartApp()"><span class="ms-icon">system_update_alt</span> Instalar y Reiniciar</button>
+      <button id="update-later-btn" class="tool-btn" style="width: 100%; justify-content: center; font-weight: bold; padding: 10px; margin-top: 10px; display: none;" onclick="document.getElementById('update-modal').style.display='none';">Más tarde</button>
+    </div>
+  </div>
+
+  <!-- BARRA SUPERIOR CON APP-LOGO.ICO -->
+  <div id="topbar">
+    <div style="display:flex; align-items:center; gap: 12px;">
+      <span style="font-weight:700; color:var(--md-text); font-size:15.5px; display:flex; align-items:center; gap:8px;">
+        <img src="app-logo.ico" style="width:24px; height:24px; object-fit:contain;" alt="" onerror="this.style.display='none'"> BlockMail 2.0
+      </span>
+      <span id="app-version" style="font-size:11.5px; color:var(--md-primary); font-weight:600; margin-right:6px;"></span>
+      <label style="font-size: 12.5px; color: var(--md-text-muted); font-weight: 600;">Asunto:</label>
+      <input type="text" id="email-subject" placeholder="Ej: ¡Llegaron las novedades!" style="width: 220px; background: var(--md-bg); border: 1px solid var(--md-border); color: var(--md-text); padding: 7px 11px; border-radius: 6px; outline:none; font-family:inherit; font-size:13px;" oninput="markUnsaved()">
+    </div>
+
+    <div style="display:flex; gap:8px; align-items: center;">
+      <div style="display:flex; gap:6px; margin-right: 6px; border-right: 1px solid var(--md-border); padding-right: 12px;">
+        <button class="tool-btn top-btn" id="btn-edit-cols" title="Habilitar nodos para editar el ancho de las columnas en la mesa de trabajo" onclick="toggleColumnEditMode()">
+          <span class="ms-icon">view_column</span> Editar Columnas
+        </button>
+        <button class="tool-btn top-btn" title="Configurar tema, espacio entre columnas y cantidad" onclick="openGridSettingsModal()">
+          <span class="ms-icon">tune</span> Ajustes
+        </button>
+      </div>
+      
+      <button class="tool-btn top-btn" onclick="showNewProjectModal()"><span class="ms-icon">note_add</span> Nuevo</button>
+      <button class="tool-btn top-btn" onclick="triggerLoadProject()"><span class="ms-icon">folder_open</span> Abrir</button>
+      
+      <div class="save-group">
+        <button class="tool-btn top-btn save-group-main" onclick="saveActiveProject(false)"><span class="ms-icon">save</span> Guardar</button>
+        <button class="save-group-arrow" onclick="event.stopPropagation(); toggleSaveDropdown()">▼</button>
+        <div id="save-dropdown" class="dropdown-menu">
+          <button onclick="saveActiveProject(true)"><span class="ms-icon">save_as</span> Guardar Como...</button>
+        </div>
+      </div>
+
+      <div class="save-group">
+        <button class="tool-btn top-btn" style="background:var(--md-primary); color:#fff; border-color:var(--md-primary);" onclick="event.stopPropagation(); toggleExportDropdown()">
+          <span class="ms-icon">ios_share</span> Exportar ▼
+        </button>
+        <div id="export-dropdown" class="dropdown-menu">
+          <button onclick="exportHTML()"><span class="ms-icon">code</span> Exportar HTML</button>
+          <button onclick="exportEML()"><span class="ms-icon">forward_to_inbox</span> Exportar Email (.eml)</button>
+        </div>
+      </div>
+
+      <input type="file" id="project-upload" accept=".bmail" style="display:none;" onchange="handleProjectUpload(event)">
+    </div>
+  </div>
+
+  <div id="tabs-bar"></div>
+
+  <div id="main-area">
+    <div id="canvas-container">
+      <div id="newsletter-canvas">
+        <div id="canvas-guides"></div>
+        <div id="insertion-guide"></div>
+        <div id="selection-box"></div>
+        <div id="multi-selection-box">
+          <div class="multi-handle mh-nw" data-pos="nw"></div>
+          <div class="multi-handle mh-ne" data-pos="ne"></div>
+          <div class="multi-handle mh-sw" data-pos="sw"></div>
+          <div class="multi-handle mh-se" data-pos="se"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sidebar">
+      <h2 style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Bloques</span>
+        <small style="font-size:10px; color:var(--md-text-muted); font-weight:normal; text-transform:none;">(Alt = Sin imán)</small>
+      </h2>
+      <button class="tool-btn" onclick="addBlock('image')"><span class="ms-icon" style="color:#3498db;">image</span> Agregar Imagen</button>
+      <button class="tool-btn" onclick="addBlock('text')"><span class="ms-icon" style="color:#2ecc71;">title</span> Agregar Texto</button>
+      <button class="tool-btn" onclick="addBlock('gif')"><span class="ms-icon" style="color:#e84393;">gif_box</span> Agregar GIF</button>
+      <button class="tool-btn" onclick="addBlock('spacer')"><span class="ms-icon" style="color:#f39c12;">table_rows</span> Tabla Vacía</button>
+
+      <!-- PANEL DE EDICIÓN DE COLUMNAS EN LA BARRA DERECHA -->
+      <div id="column-properties-panel">
+        <h2 style="margin-bottom: 10px; color: var(--md-primary); display:flex; align-items:center; gap:6px;">
+          <span class="ms-icon">view_column</span> Editar Columnas
+        </h2>
+        <div id="selected-col-label" style="font-size:12.5px; color:var(--md-text); background:var(--md-primary-container); padding:8px 10px; border-radius:6px; margin-bottom:12px; font-weight:600; text-align:center;">
+          Columna 1 seleccionada
+        </div>
+
+        <div class="prop-row">
+          <label>Ancho de Columna (px)</label>
+          <div class="num-wrap">
+            <input type="number" id="col-width-input" oninput="updateSelectedColumnWidth(this.value)">
+            <div class="num-arrows">
+              <div class="num-arr up" onclick="adjustColWidth(1)">▲</div>
+              <div class="num-arr" onclick="adjustColWidth(-1)">▼</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="prop-row">
+          <label>Espacio uniforme (px)</label>
+          <div class="num-wrap">
+            <input type="number" id="sidebar-gap-input" oninput="updateUniformGapLive(this.value)">
+            <div class="num-arrows">
+              <div class="num-arr up" onclick="adjustUniformGap(1)">▲</div>
+              <div class="num-arr" onclick="adjustUniformGap(-1)">▼</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:11px; color:var(--md-text-muted); line-height:1.4; margin: 10px 0;">
+          💡 Hacé clic en una columna del lienzo o arrastrá los nodos azules para cambiar su ancho. Las demás columnas se ajustan solas a 850px.
+        </div>
+
+        <button class="tool-btn" style="width:100%; justify-content:center; margin-top:8px;" onclick="equalizeActiveColumns()">
+          <span class="ms-icon">balance</span> Igualar todas las columnas
+        </button>
+        <button class="tool-btn" style="width:100%; justify-content:center; background:var(--md-primary); border-color:var(--md-primary); color:#fff; margin-bottom:0;" onclick="toggleColumnEditMode()">
+          <span class="ms-icon">done</span> Listo
+        </button>
+      </div>
+
+      <!-- PANEL DE PROPIEDADES DE BLOQUES -->
+      <div id="properties-panel">
+        <h2 style="margin-bottom: 12px; color: var(--md-primary); display:flex; align-items:center; gap:6px;">
+          <span class="ms-icon">sliders</span> Propiedades
+        </h2>
+        <div id="multi-select-msg">Varios bloques seleccionados.<br><small>Arrastrá desde las esquinas para cambiar el tamaño en conjunto.</small></div>
+        
+        <div id="single-properties">
+          <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:6px;">Alinear caja con el lienzo</label>
+          <div class="align-group">
+            <button class="tool-btn align-btn" onclick="alignBlock('left')" title="Izquierda"><span class="ms-icon">align_horizontal_left</span></button>
+            <button class="tool-btn align-btn" onclick="alignBlock('center')" title="Centro"><span class="ms-icon">align_horizontal_center</span></button>
+            <button class="tool-btn align-btn" onclick="alignBlock('right')" title="Derecha"><span class="ms-icon">align_horizontal_right</span></button>
+          </div>
+          
+          <div class="prop-row"><label>Pos. X</label>
+            <div class="num-wrap"><input type="number" id="prop-x" oninput="updateSelectedBlock('x')">
+              <div class="num-arrows"><div class="num-arr up" onclick="adjustNum('prop-x', 1)">▲</div><div class="num-arr" onclick="adjustNum('prop-x', -1)">▼</div></div>
+            </div>
+          </div>
+          <div class="prop-row"><label>Pos. Y</label>
+            <div class="num-wrap"><input type="number" id="prop-y" oninput="updateSelectedBlock('y')">
+              <div class="num-arrows"><div class="num-arr up" onclick="adjustNum('prop-y', 1)">▲</div><div class="num-arr" onclick="adjustNum('prop-y', -1)">▼</div></div>
+            </div>
+          </div>
+          <div class="prop-row"><label>Ancho</label>
+            <div class="num-wrap"><input type="number" id="prop-w" oninput="updateSelectedBlock('w')">
+              <div class="num-arrows"><div class="num-arr up" onclick="adjustNum('prop-w', 1)">▲</div><div class="num-arr" onclick="adjustNum('prop-w', -1)">▼</div></div>
+            </div>
+          </div>
+          <div class="prop-row"><label>Alto</label>
+            <div class="num-wrap"><input type="number" id="prop-h" oninput="updateSelectedBlock('h')">
+              <div class="num-arrows"><div class="num-arr up" onclick="adjustNum('prop-h', 1)">▲</div><div class="num-arr" onclick="adjustNum('prop-h', -1)">▼</div></div>
+            </div>
+          </div>
+          
+          <div id="media-properties">
+            <div id="image-props" style="display:none;">
+               <label style="font-size: 12px; color: var(--md-text-muted);">URL de Imagen (en servidor)</label>
+               <input type="text" id="image-url" class="media-input" placeholder="https://..." oninput="handleImageURL(event)">
+               <div style="font-size: 11px; color: var(--md-text-muted); text-align: center; margin: 10px 0 6px 0;">— o subir archivo local —</div>
+               <input type="file" id="image-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+               <button class="tool-btn" onclick="document.getElementById('image-upload').click()" style="width:100%; background:#1FAF38; border-color:#158a29; color:#fff; justify-content:center; margin-top:5px;"><span class="ms-icon">upload_file</span> Adjuntar Imagen Local</button>
+            </div>
+            <div id="gif-props" style="display:none;">
+               <label style="font-size: 12px; color: var(--md-text-muted);">Pegá acá el Embed o Link de Giphy</label>
+               <input type="text" id="gif-url" class="media-input" placeholder="Pegar código..." oninput="handleGifURL(event)">
+            </div>
+            <div style="margin-top:15px; border-top:1px solid var(--md-border); padding-top:15px;">
+              <label style="font-size: 12px; color: var(--md-text-muted);">Vínculo (URL) al hacer clic</label>
+              <input type="text" id="prop-href" class="media-input" placeholder="https://..." oninput="updateMediaLink()">
+            </div>
+          </div>
+          
+          <div id="text-props">
+            <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:5px;">Tipografía (Estándar Email)</label>
+            <select id="prop-font-family" class="media-input" style="margin-top:0;" onchange="updateTextProperties()" disabled>
+              <option value="Arial, sans-serif" selected>Arial</option>
+            </select>
+
+            <div style="display:flex; justify-content:space-between; margin-top:10px;">
+              <div class="text-prop-box" style="width:48%;" title="Tamaño de fuente (px)">
+                <span style="font-size:13px; color:var(--md-text-muted); font-weight:bold; margin-right:5px;">T</span>
+                <input type="number" id="prop-font-size" oninput="updateTextProperties()">
+                <span style="font-size:10px; color:var(--md-text-muted); margin-left:3px;">px</span>
+              </div>
+              <div class="text-prop-box" style="width:48%;" title="Interlineado (px)">
+                <span style="font-size:13px; color:var(--md-text-muted); font-weight:bold; margin-right:5px;">↕</span>
+                <input type="number" id="prop-line-height" oninput="updateTextProperties()">
+                <span style="font-size:10px; color:var(--md-text-muted); margin-left:3px;">px</span>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:6px;">
+              <div class="text-prop-box" style="width:48%;" title="Espacio Superior (px)">
+                <span style="font-size:13px; color:var(--md-text-muted); font-weight:bold; margin-right:5px;">↧</span>
+                <input type="number" id="prop-padding-top" oninput="updateTextProperties()">
+                <span style="font-size:10px; color:var(--md-text-muted); margin-left:3px;">px</span>
+              </div>
+              <div class="text-prop-box" style="width:48%;" title="Espacio Lados (px)">
+                <span style="font-size:13px; color:var(--md-text-muted); font-weight:bold; margin-right:5px;">↔</span>
+                <input type="number" id="prop-padding-sides" oninput="updateTextProperties()">
+                <span style="font-size:10px; color:var(--md-text-muted); margin-left:3px;">px</span>
+              </div>
+            </div>
+            
+            <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:5px; margin-top:15px;">Formato y Color</label>
+            <div class="align-group" style="margin-bottom: 8px;">
+              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('bold')" title="Negrita"><b>B</b></button>
+              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('italic')" title="Cursiva"><i>I</i></button>
+              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('underline')" title="Subrayado"><u>U</u></button>
+              <input type="color" id="inline-color" title="Color Selección" style="width:25%; height:34px; margin-top:0; background:none; border:1px solid var(--md-border); border-radius:6px; cursor:pointer;" oninput="inlineFormat('foreColor', this.value)" onchange="inlineFormat('foreColor', this.value);">
+            </div>
+            
+            <div id="palette-container" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; background: var(--md-surface); padding: 8px; border: 1px solid var(--md-border); border-radius:6px;"></div>
+            
+            <div style="display:flex; gap: 6px; margin-bottom: 5px;">
+              <input type="color" id="new-color-picker" style="width:32px; height:32px; padding:0; border:none; cursor:pointer; background:transparent;" title="Elegir nuevo color">
+              <button class="tool-btn" style="margin:0; padding:4px 8px; flex:1; justify-content:center;" onclick="addCustomColor()"><span class="ms-icon" style="font-size:16px;">add</span> Añadir</button>
+              <button class="tool-btn" style="margin:0; padding:4px 8px; flex:1; justify-content:center; background-color:#175185; border-color:#0b3963; color:#fff;" onclick="document.getElementById('ase-upload').click()"><span class="ms-icon" style="font-size:16px;">palette</span> .ase</button>
+              <input type="file" id="ase-upload" accept=".ase" style="display:none;" onchange="loadASEFile(event)">
+            </div>
+            <div style="font-size:10px; color:var(--md-text-muted); text-align:center; margin-bottom:14px; font-style:italic;">(Clic derecho para eliminar un color)</div>
+
+            <div id="ase-palettes-container"></div>
+
+            <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:5px;">Alineación Vertical</label>
+            <div class="align-group" style="margin-bottom: 10px;">
+              <button class="tool-btn align-btn" onclick="updateTextVAlign('flex-start')" title="Pegado Arriba"><span class="ms-icon">align_vertical_top</span></button>
+              <button class="tool-btn align-btn" onclick="updateTextVAlign('center')" title="Centrado al medio"><span class="ms-icon">align_vertical_center</span></button>
+              <button class="tool-btn align-btn" onclick="updateTextVAlign('flex-end')" title="Pegado Abajo"><span class="ms-icon">align_vertical_bottom</span></button>
+            </div>
+
+            <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:5px;">Alineación Párrafo</label>
+            <div class="align-group">
+              <button class="tool-btn align-btn" onclick="updateTextAlign('left')" title="Alinear a la Izquierda"><span class="ms-icon">format_align_left</span></button>
+              <button class="tool-btn align-btn" onclick="updateTextAlign('center')" title="Centrar"><span class="ms-icon">format_align_center</span></button>
+              <button class="tool-btn align-btn" onclick="updateTextAlign('right')" title="Alinear a la Derecha"><span class="ms-icon">format_align_right</span></button>
+              <button class="tool-btn align-btn" onclick="updateTextAlign('justify')" title="Justificar"><span class="ms-icon">format_align_justify</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+    // ==========================================
+    // NOTIFICACIONES Y MODALES "CON SALSA" (ADIÓS ALERT DE WINDOWS)
+    // ==========================================
+    function showSalsaToast(title, message, type = 'success') {
+      const container = document.getElementById('salsa-toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `salsa-toast ${type}`;
+
+      let iconName = 'check_circle';
+      if (type === 'error') iconName = 'error';
+      else if (type === 'info') iconName = 'auto_awesome';
+
+      toast.innerHTML = `
+        <div class="salsa-toast-icon"><span class="ms-icon" style="font-size:24px;">${iconName}</span></div>
+        <div class="salsa-toast-body">
+          <div class="salsa-toast-title">${title}</div>
+          <div class="salsa-toast-msg">${message}</div>
+        </div>
+        <button class="salsa-toast-close" title="Cerrar">✕</button>
+        <div class="salsa-toast-bar"></div>
+      `;
+
+      const closeBtn = toast.querySelector('.salsa-toast-close');
+      const removeToast = () => {
+        if (toast.classList.contains('hiding')) return;
+        toast.classList.add('hiding');
+        setTimeout(() => toast.remove(), 250);
+      };
+
+      closeBtn.onclick = removeToast;
+      container.appendChild(toast);
+      setTimeout(removeToast, 3600);
+    }
+
+    function showSalsaConfirm(title, message, onConfirm) {
+      const modal = document.getElementById('salsa-confirm-modal');
+      const titleEl = document.getElementById('salsa-confirm-title');
+      const textEl = document.getElementById('salsa-confirm-text');
+      const btnCancel = document.getElementById('salsa-confirm-cancel');
+      const btnOk = document.getElementById('salsa-confirm-ok');
+
+      if (!modal) return;
+      titleEl.textContent = title;
+      textEl.textContent = message;
+      modal.style.display = 'flex';
+
+      btnCancel.onclick = () => {
+        modal.style.display = 'none';
+      };
+      btnOk.onclick = () => {
+        modal.style.display = 'none';
+        if (typeof onConfirm === 'function') onConfirm();
+      };
+    }
+
+    // ==========================================
+    // GESTIÓN DE TEMAS (CLARO, GRIS, OSCURO)
+    // ==========================================
+    let currentAppTheme = localStorage.getItem('bmail_theme') || 'dark';
+
+    function setAppTheme(theme, silent = false) {
+      if (!['light', 'gray', 'dark'].includes(theme)) theme = 'dark';
+      currentAppTheme = theme;
+      document.body.setAttribute('data-theme', theme);
+      localStorage.setItem('bmail_theme', theme);
+
+      ['light', 'gray', 'dark'].forEach(t => {
+        const btn = document.getElementById('theme-btn-' + t);
+        if (btn) btn.classList.toggle('active', t === theme);
+      });
+
+      if (!silent) {
+        const nombres = { light: 'Modo Claro', gray: 'Modo Gris', dark: 'Modo Oscuro' };
+        showSalsaToast("Tema actualizado", `Activaste el ${nombres[theme]}.`, "info");
+      }
+    }
+
+    // ==========================================
+    // LÓGICA DE SISTEMA (ELECTRON E IPC)
+    // ==========================================
+    function safeJSONParse(key, fallback) {
+      try {
+        let item = localStorage.getItem(key);
+        if (item === null || item === 'undefined' || item === '') return fallback;
+        let parsed = JSON.parse(item);
+        return parsed !== null ? parsed : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    let fs, path, ipcRenderer;
+    
+    try { 
+      fs = require('fs'); 
+      path = require('path'); 
+      const electron = require('electron');
+      ipcRenderer = electron.ipcRenderer; 
+    } catch(e) { 
+      console.warn("Modo Web - Módulos de sistema bloqueados o no disponibles."); 
+    }
+    
+    let userDataPath = '';
+
+    if (ipcRenderer && fs && path) {
+      ipcRenderer.invoke('get-app-version').then(version => {
+         const vStr = "v" + version;
+         if(document.getElementById('app-version')) document.getElementById('app-version').innerText = vStr;
+         if(document.getElementById('ws-app-version')) document.getElementById('ws-app-version').innerText = vStr;
+      }).catch(e => console.log(e));
+
+      ipcRenderer.invoke('get-user-data-path').then(p => {
+         userDataPath = p;
+         const thumbsDir = path.join(userDataPath, 'thumbnails');
+         if (!fs.existsSync(thumbsDir)) {
+           fs.mkdirSync(thumbsDir, { recursive: true });
+         }
+         renderRecents();
+      }).catch(e => console.log(e));
+      
+      ipcRenderer.on('open-external-file', (event, filePath) => {
+         try {
+            const content = fs.readFileSync(filePath, 'utf-8');
+            loadProjectIntoTab(filePath, JSON.parse(content));
+         } catch(e) { 
+            showSalsaToast("Error al abrir", "No se pudo leer el archivo del proyecto.", "error");
+         }
+      });
+
+      ipcRenderer.on('request-app-close', () => {
+         try {
+             if (projects.some(p => p.unsaved)) {
+                 document.getElementById('close-tab-modal').style.display = 'flex';
+                 isAppClosing = true;
+             } else {
+                 ipcRenderer.send('force-close-app');
+             }
+         } catch(err) {
+             ipcRenderer.send('force-close-app');
+         }
+      });
+
+      ipcRenderer.on('update-available', (event, info) => {
+         document.getElementById('update-modal').style.display = 'flex';
+         document.getElementById('update-title').innerText = "¡Nueva actualización!";
+         document.getElementById('update-text').innerText = "Descargando la última versión...";
+         document.getElementById('update-spinner').style.display = 'block';
+         document.getElementById('update-btn').style.display = 'none';
+         document.getElementById('update-later-btn').style.display = 'none';
+      });
+
+      ipcRenderer.on('update-downloaded', (event, info) => {
+         document.getElementById('update-title').innerText = "¡Actualización lista!";
+         document.getElementById('update-text').innerText = "Se descargó correctamente. Reiniciá para aplicar los cambios.";
+         document.getElementById('update-spinner').style.display = 'none';
+         document.getElementById('update-btn').style.display = 'flex';
+         document.getElementById('update-later-btn').style.display = 'flex';
+         if (info && info.version) {
+            document.getElementById('update-details').style.display = 'block';
+            document.getElementById('update-details').innerText = "Nueva versión: " + info.version;
+         }
+      });
+    }
+
+    function restartApp() {
+      if (ipcRenderer) ipcRenderer.send('restart-app');
+    }
+
+    function closeDropdowns() {
+      const sd = document.getElementById('save-dropdown');
+      const ed = document.getElementById('export-dropdown');
+      if (sd) sd.style.display = 'none';
+      if (ed) ed.style.display = 'none';
+    }
+
+    function toggleSaveDropdown() {
+      const sd = document.getElementById('save-dropdown');
+      const ed = document.getElementById('export-dropdown');
+      if (ed) ed.style.display = 'none';
+      if (!sd) return;
+      sd.style.display = (sd.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function toggleExportDropdown() {
+      const sd = document.getElementById('save-dropdown');
+      const ed = document.getElementById('export-dropdown');
+      if (sd) sd.style.display = 'none';
+      if (!ed) return;
+      ed.style.display = (ed.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    let isAppClosing = false;
+    let projects = [];
+    let activeProjectIndex = -1;
+    let tabToClose = -1;
+
+    const subjectInput = document.getElementById('email-subject');
+    const canvas = document.getElementById('newsletter-canvas');
+    const guidesContainer = document.getElementById('canvas-guides');
+    const insertionGuide = document.getElementById('insertion-guide');
+    
+    let historyArr = []; 
+    let historyIndex = -1; 
+    let isRestoring = false;
+
+    // ==========================================
+    // GRILLA PERSONALIZABLE Y EDICIÓN EN MESA DE TRABAJO
+    // ==========================================
+    let currentColumns = 1;
+    let currentColWidths = [850];
+    let currentGapWidths = [];
+    let gridGuides = [0, 850];
+    let columnWidth = 850;
+
+    let tempCols = 1;
+    let isColEditMode = false;
+    let selectedColIndex = 0;
+
+    function getDefaultGrid(cols, customGap = 20) {
+      const totalWidth = 850;
+      const gapVal = cols > 1 ? customGap : 0;
+      const gapWidths = Array(Math.max(0, cols - 1)).fill(gapVal);
+      const totalGaps = gapWidths.reduce((a, b) => a + b, 0);
+      const baseColW = Math.floor((totalWidth - totalGaps) / cols);
+      const colWidths = Array(cols).fill(baseColW);
+      const currentSum = colWidths.reduce((a, b) => a + b, 0) + totalGaps;
+      if (cols > 0) colWidths[cols - 1] += (totalWidth - currentSum);
+      return { columns: cols, colWidths, gapWidths };
+    }
+
+    function showNewProjectModal() {
+      document.getElementById('welcome-screen').style.display = 'none';
+      document.getElementById('new-project-modal').style.display = 'flex';
+    }
+
+    function createProject(cols) {
+      document.getElementById('new-project-modal').style.display = 'none';
+      if (isColEditMode) toggleColumnEditMode();
+      const grid = getDefaultGrid(cols, 20);
+      let newProj = { 
+          id: Date.now().toString(), 
+          name: 'Sin Título', 
+          filePath: null, 
+          subject: '', 
+          blocks: [], 
+          historyArr: [[]], 
+          historyIndex: 0, 
+          unsaved: false,
+          columns: grid.columns,
+          colWidths: grid.colWidths,
+          gapWidths: grid.gapWidths
+      };
+      projects.push(newProj); 
+      switchTab(projects.length - 1); 
+      showSalsaToast("Plantilla creada", `Proyecto iniciado con grilla de ${cols} ${cols === 1 ? 'columna' : 'columnas'}.`, "info");
+    }
+
+    // DIBUJA COLUMNAS BLANCAS, GUÍAS Y NODOS INTERACTIVOS EN EL LIENZO
+    function drawGuides() {
+      guidesContainer.innerHTML = '';
+      gridGuides = [0];
+
+      if (!currentColWidths || currentColWidths.length !== currentColumns) {
+        const def = getDefaultGrid(currentColumns || 1, currentGapWidths[0] || 20);
+        currentColWidths = def.colWidths;
+        currentGapWidths = def.gapWidths;
+      }
+
+      if (selectedColIndex >= currentColumns) selectedColIndex = 0;
+      columnWidth = currentColWidths[0] || 850;
+      
+      let currentX = 0;
+      for (let i = 0; i < currentColWidths.length; i++) {
+         let colW = currentColWidths[i];
+
+         let colBand = document.createElement('div');
+         colBand.className = 'col-band' + (isColEditMode && i === selectedColIndex ? ' selected-col' : '');
+         colBand.style.left = currentX + 'px';
+         colBand.style.width = colW + 'px';
+         colBand.innerHTML = `<div class="col-badge">Col ${i + 1} · ${colW}px</div>`;
+         colBand.onclick = (e) => {
+           if (!isColEditMode) return;
+           e.stopPropagation();
+           selectColumnForEdit(i);
+         };
+         guidesContainer.appendChild(colBand);
+
+         let leftGuide = document.createElement('div');
+         leftGuide.style.cssText = `position:absolute; left:${currentX}px; top:0; bottom:0; width:1px; border-left:1px dashed #0d99ff; opacity:0.35; z-index:3; pointer-events:none;`;
+         guidesContainer.appendChild(leftGuide);
+         if (!gridGuides.includes(currentX)) gridGuides.push(currentX);
+         
+         currentX += colW;
+
+         let rightGuide = document.createElement('div');
+         rightGuide.style.cssText = `position:absolute; left:${currentX}px; top:0; bottom:0; width:1px; border-left:1px dashed #0d99ff; opacity:0.35; z-index:3; pointer-events:none;`;
+         guidesContainer.appendChild(rightGuide);
+         if (!gridGuides.includes(currentX)) gridGuides.push(currentX);
+
+         if (i < currentColWidths.length - 1) {
+            let nodeHandle = document.createElement('div');
+            nodeHandle.className = 'col-node-handle';
+            nodeHandle.style.left = currentX + 'px';
+            nodeHandle.title = `Arrastrar para ajustar Columna ${i + 1}`;
+            nodeHandle.innerHTML = `<div class="col-node-pill">⋮</div>`;
+            nodeHandle.onmousedown = (e) => {
+              if (!isColEditMode) return;
+              e.stopPropagation();
+              e.preventDefault();
+              selectColumnForEdit(i);
+              startColumnNodeDrag(e, i);
+            };
+            guidesContainer.appendChild(nodeHandle);
+         }
+         
+         if (i < currentGapWidths.length) {
+            currentX += currentGapWidths[i];
+         }
+      }
+      if (!gridGuides.includes(850)) gridGuides.push(850);
+      gridGuides.sort((a, b) => a - b);
+    }
+
+    function toggleColumnEditMode() {
+      if (activeProjectIndex < 0) return;
+      isColEditMode = !isColEditMode;
+      document.body.classList.toggle('col-edit-mode', isColEditMode);
+      const btn = document.getElementById('btn-edit-cols');
+      if (btn) btn.classList.toggle('active-mode', isColEditMode);
+
+      const colPanel = document.getElementById('column-properties-panel');
+      if (isColEditMode) {
+        clearSelection();
+        propertiesPanel.style.display = 'none';
+        colPanel.style.display = 'block';
+        selectColumnForEdit(selectedColIndex < currentColumns ? selectedColIndex : 0);
+      } else {
+        colPanel.style.display = 'none';
+        drawGuides();
+      }
+    }
+
+    function selectColumnForEdit(index) {
+      selectedColIndex = index;
+      const lbl = document.getElementById('selected-col-label');
+      if (lbl) lbl.innerText = `Columna ${index + 1} seleccionada (de ${currentColumns})`;
+      const wInput = document.getElementById('col-width-input');
+      if (wInput) {
+        wInput.value = currentColWidths[index] || 850;
+        wInput.disabled = (currentColumns <= 1);
+      }
+      const gInput = document.getElementById('sidebar-gap-input');
+      if (gInput) {
+        gInput.value = currentColumns > 1 ? (currentGapWidths[0] ?? 20) : 0;
+        gInput.disabled = (currentColumns <= 1);
+      }
+      drawGuides();
+    }
+
+    function setColumnWidthAndAutoAdjust(colIdx, newWidth) {
+      if (currentColumns <= 1) {
+        currentColWidths = [850];
+        drawGuides();
+        return;
+      }
+      const minW = 40;
+      const totalGaps = currentGapWidths.reduce((a, b) => a + b, 0);
+      const availTotal = 850 - totalGaps;
+      const maxW = availTotal - (currentColumns - 1) * minW;
+
+      let clampedW = Math.max(minW, Math.min(maxW, Math.round(newWidth)));
+      let oldW = currentColWidths[colIdx];
+      let delta = clampedW - oldW;
+      if (delta === 0) return;
+
+      currentColWidths[colIdx] = clampedW;
+      let remainingDelta = -delta;
+
+      let order = [];
+      for (let j = colIdx + 1; j < currentColumns; j++) order.push(j);
+      for (let j = colIdx - 1; j >= 0; j--) order.push(j);
+
+      for (let j of order) {
+        if (remainingDelta === 0) break;
+        let cur = currentColWidths[j];
+        let next = Math.max(minW, Math.min(maxW, cur + remainingDelta));
+        let applied = next - cur;
+        currentColWidths[j] = next;
+        remainingDelta -= applied;
+      }
+
+      syncActiveProject();
+      markUnsaved();
+      drawGuides();
+    }
+
+    function startColumnNodeDrag(e, colIdx) {
+      const startX = e.clientX;
+      const startW = currentColWidths[colIdx];
+      function onMove(moveEvent) {
+        let dx = moveEvent.clientX - startX;
+        setColumnWidthAndAutoAdjust(colIdx, startW + dx);
+        const wInput = document.getElementById('col-width-input');
+        if (wInput) wInput.value = currentColWidths[colIdx];
+      }
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+
+    function updateSelectedColumnWidth(val) {
+      let num = parseInt(val);
+      if (isNaN(num)) return;
+      setColumnWidthAndAutoAdjust(selectedColIndex, num);
+    }
+
+    function adjustColWidth(dir) {
+      if (currentColumns <= 1) return;
+      let nextVal = (currentColWidths[selectedColIndex] || 0) + dir;
+      setColumnWidthAndAutoAdjust(selectedColIndex, nextVal);
+      const wInput = document.getElementById('col-width-input');
+      if (wInput) wInput.value = currentColWidths[selectedColIndex];
+    }
+
+    function updateUniformGapLive(val) {
+      if (currentColumns <= 1) return;
+      let gap = Math.max(0, Math.min(200, parseInt(val) || 0));
+      currentGapWidths = Array(currentColumns - 1).fill(gap);
+      rebalanceColumnsForGap();
+      const wInput = document.getElementById('col-width-input');
+      if (wInput) wInput.value = currentColWidths[selectedColIndex];
+      syncActiveProject();
+      markUnsaved();
+      drawGuides();
+    }
+
+    function adjustUniformGap(dir) {
+      if (currentColumns <= 1) return;
+      const gInput = document.getElementById('sidebar-gap-input');
+      let cur = parseInt(gInput.value) || 0;
+      let next = Math.max(0, Math.min(200, cur + dir));
+      gInput.value = next;
+      updateUniformGapLive(next);
+    }
+
+    function rebalanceColumnsForGap() {
+      const totalGaps = currentGapWidths.reduce((a, b) => a + b, 0);
+      const avail = Math.max(currentColumns * 40, 850 - totalGaps);
+      const currentSumCols = currentColWidths.reduce((a, b) => a + b, 0) || 1;
+      let newWidths = currentColWidths.map(w => Math.max(40, Math.floor((w / currentSumCols) * avail)));
+      let diff = avail - newWidths.reduce((a, b) => a + b, 0);
+      newWidths[newWidths.length - 1] += diff;
+      currentColWidths = newWidths;
+    }
+
+    function equalizeActiveColumns() {
+      const gap = currentColumns > 1 ? (currentGapWidths[0] ?? 20) : 0;
+      const def = getDefaultGrid(currentColumns, gap);
+      currentColWidths = def.colWidths;
+      currentGapWidths = def.gapWidths;
+      selectColumnForEdit(selectedColIndex);
+      syncActiveProject();
+      markUnsaved();
+      showSalsaToast("Columnas igualadas", "Todas las columnas ahora tienen el mismo ancho.", "info");
+    }
+
+    function openGridSettingsModal() {
+      tempCols = currentColumns || 1;
+      const currentGap = currentGapWidths.length > 0 ? currentGapWidths[0] : 20;
+      document.getElementById('uniform-gap-input').value = currentGap;
+      highlightSettingsColBtn();
+      setAppTheme(currentAppTheme, true);
+      document.getElementById('grid-settings-modal').style.display = 'flex';
+    }
+
+    function changeSettingsColumns(cols) {
+      tempCols = cols;
+      highlightSettingsColBtn();
+    }
+
+    function highlightSettingsColBtn() {
+      for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById('set-col-' + i);
+        if (btn) btn.classList.toggle('active', i === tempCols);
+      }
+    }
+
+    function applyGridSettings() {
+      const uniformGap = Math.max(0, Math.min(200, parseInt(document.getElementById('uniform-gap-input').value) || 0));
+      if (activeProjectIndex >= 0 && projects[activeProjectIndex]) {
+        if (tempCols !== currentColumns) {
+          currentColumns = tempCols;
+          const def = getDefaultGrid(currentColumns, uniformGap);
+          currentColWidths = def.colWidths;
+          currentGapWidths = def.gapWidths;
+        } else {
+          currentGapWidths = Array(Math.max(0, currentColumns - 1)).fill(uniformGap);
+          rebalanceColumnsForGap();
+        }
+
+        projects[activeProjectIndex].columns = currentColumns;
+        projects[activeProjectIndex].colWidths = [...currentColWidths];
+        projects[activeProjectIndex].gapWidths = [...currentGapWidths];
+
+        if (isColEditMode) selectColumnForEdit(0);
+        else drawGuides();
+        markUnsaved();
+        showSalsaToast("Ajustes aplicados", `Grilla de ${currentColumns} col · espacio de ${uniformGap}px.`, "success");
+      } else {
+        currentColumns = tempCols;
+      }
+      document.getElementById('grid-settings-modal').style.display = 'none';
+    }
+
+    // ==========================================
+    // UTILIDADES Y TABS
+    // ==========================================
+    function adjustNum(id, dir) {
+      let el = document.getElementById(id);
+      let val = parseInt(el.value) || 0;
+      el.value = val + dir;
+      el.dispatchEvent(new Event('input'));
+      saveState();
+    }
+
+    function renderTabs() {
+      const tabsBar = document.getElementById('tabs-bar');
+      tabsBar.innerHTML = '';
+      projects.forEach((proj, index) => {
+         let tab = document.createElement('div');
+         tab.className = 'tab';
+         if (index === activeProjectIndex) tab.classList.add('active');
+         
+         let titleStr = proj.name;
+         if (proj.unsaved) titleStr += ' •';
+         
+         tab.innerHTML = `
+            <span class="tab-title" title="${proj.filePath || proj.name}">${titleStr}</span>
+            <button class="tab-close" onclick="attemptCloseTab(event, ${index})">✖</button>
+         `;
+         tab.onclick = () => { if (index !== activeProjectIndex) switchTab(index); };
+         tabsBar.appendChild(tab);
+      });
+    }
+
+    function markUnsaved() {
+      if (!isRestoring && activeProjectIndex >= 0 && projects[activeProjectIndex]) {
+          projects[activeProjectIndex].unsaved = true;
+          renderTabs();
+      }
+    }
+
+    function syncActiveProject() {
+      if (activeProjectIndex >= 0 && projects[activeProjectIndex]) {
+          projects[activeProjectIndex].subject = subjectInput.value;
+          projects[activeProjectIndex].historyArr = [...historyArr];
+          projects[activeProjectIndex].historyIndex = historyIndex;
+          projects[activeProjectIndex].blocks = historyArr[historyIndex] || [];
+          projects[activeProjectIndex].columns = currentColumns;
+          projects[activeProjectIndex].colWidths = [...currentColWidths];
+          projects[activeProjectIndex].gapWidths = [...currentGapWidths];
+      }
+    }
+
+    function switchTab(index) {
+      syncActiveProject();
+      activeProjectIndex = index;
+      let p = projects[index];
+      
+      isRestoring = true;
+      subjectInput.value = p.subject;
+      historyArr = [...p.historyArr];
+      historyIndex = p.historyIndex;
+      currentColumns = p.columns || 1;
+      const def = getDefaultGrid(currentColumns, 20);
+      currentColWidths = p.colWidths || def.colWidths;
+      currentGapWidths = p.gapWidths || def.gapWidths;
+      
+      drawGuides();
+      
+      document.querySelectorAll('.block').forEach(b => b.remove());
+      selectedBlocks.clear();
+      
+      if (p.blocks) {
+          p.blocks.forEach(item => { 
+              if (item.type === 'shape') return;
+              let b = addBlock(item.type, item); 
+              if (item.selected) addToSelection(b); 
+          });
+      }
+      
+      updateCanvasHeight(); 
+      updatePropertiesUI(); 
+      isRestoring = false; 
+      renderTabs();
+    }
+
+    function loadProjectIntoTab(filePath, data) {
+      let existingIndex = projects.findIndex(p => p.filePath === filePath);
+      if (existingIndex !== -1) {
+          switchTab(existingIndex);
+          showSalsaToast("Proyecto activo", "El archivo ya estaba abierto en esta pestaña.", "info");
+          return;
+      }
+      const cols = data.columns || 1;
+      const def = getDefaultGrid(cols, 20);
+      let loadedProj = {
+          id: Date.now().toString(),
+          name: typeof path !== 'undefined' ? path.basename(filePath, '.bmail') : filePath,
+          filePath: filePath,
+          subject: data.subject || '',
+          blocks: (data.blocks || []).filter(b => b.type !== 'shape'),
+          historyArr: [(data.blocks || []).filter(b => b.type !== 'shape')],
+          historyIndex: 0,
+          unsaved: false,
+          columns: cols,
+          colWidths: data.colWidths || def.colWidths,
+          gapWidths: data.gapWidths || def.gapWidths
+      };
+      projects.push(loadedProj);
+      switchTab(projects.length - 1);
+      document.getElementById('welcome-screen').style.display = 'none';
+      showSalsaToast("Proyecto cargado", `Se abrió "${loadedProj.name}" correctamente.`, "success");
+    }
+
+    function attemptCloseTab(e, index) {
+      e.stopPropagation();
+      if (projects[index].unsaved) {
+          isAppClosing = false; 
+          tabToClose = index;
+          document.getElementById('close-tab-modal').style.display = 'flex';
+      } else { 
+          forceCloseTab(index); 
+      }
+    }
+
+    async function confirmClose(save) {
+      document.getElementById('close-tab-modal').style.display = 'none';
+      if (isAppClosing) {
+          if (save) {
+              for (let i = 0; i < projects.length; i++) {
+                  if (projects[i].unsaved) { 
+                      switchTab(i); 
+                      await saveActiveProject(false); 
+                  }
+              }
+          }
+          if (ipcRenderer) ipcRenderer.send('force-close-app');
+      } else {
+          if (save) {
+              if (activeProjectIndex !== tabToClose) switchTab(tabToClose);
+              let saved = await saveActiveProject(false);
+              if (!saved) return; 
+          }
+          forceCloseTab(tabToClose);
+      }
+    }
+
+    function forceCloseTab(index) {
+      projects.splice(index, 1);
+      if (projects.length === 0) {
+          if (isColEditMode) toggleColumnEditMode();
+          activeProjectIndex = -1; 
+          document.getElementById('welcome-screen').style.display = 'flex';
+          document.querySelectorAll('.block').forEach(b => b.remove()); 
+          subjectInput.value = ''; 
+          renderTabs();
+          renderRecents();
+      } else {
+          switchTab(Math.max(0, index - 1)); 
+      }
+    }
+
+    // ==========================================
+    // GENERADOR DE MINIATURAS FIEL AL EDITOR (CON MÁSCARAS DE RECORTE)
+    // ==========================================
+    function normalizeBlockForThumbnail(raw) {
+      let x = parseInt(raw.x) || 0;
+      let y = parseInt(raw.y) || 0;
+      let w = parseInt(raw.w) || 100;
+      let h = parseInt(raw.h) || 100;
+      let html = raw.html || '';
+      if (html.includes('icon-text.png') || html.includes('ms-icon') || html === 'Doble clic acá para editar el texto.') {
+        html = '';
+      }
+
+      let fsVal = 14, lhVal = 20, ptVal = 10, pxVal = 15;
+      let ffVal = 'Arial, Helvetica, sans-serif';
+      let colorVal = '#000000';
+      let textAlign = 'left';
+
+      if (raw.css) {
+        const temp = document.createElement('div');
+        temp.style.cssText = raw.css;
+        fsVal = parseInt(temp.style.fontSize) || 14;
+        lhVal = parseInt(temp.style.lineHeight) || Math.round(fsVal * 1.2) || 20;
+        ptVal = parseInt(temp.style.paddingTop) || 10;
+        pxVal = parseInt(temp.style.paddingLeft) || 15;
+        if (temp.style.color) colorVal = rgbToHex(temp.style.color);
+        if (temp.style.textAlign) textAlign = temp.style.textAlign;
+      }
+
+      return {
+        type: raw.type,
+        x, y, w, h,
+        src: raw.src || '',
+        href: raw.href || '',
+        html,
+        css: raw.css || '',
+        fsVal, lhVal, ptVal, pxVal, ffVal, colorVal, textAlign
+      };
+    }
+
+    async function generateThumbnailFromProjectData(projectData) {
+      try {
+        const rawBlocks = (projectData && projectData.blocks) ? projectData.blocks : [];
+        const blocks = rawBlocks.filter(b => b.type !== 'shape').map(normalizeBlockForThumbnail);
+
+        const thumbScale = 0.5;
+        const maxBottom = blocks.length > 0 ? Math.max(...blocks.map(b => b.y + b.h)) : 650;
+        const captureH = Math.max(620, Math.min(maxBottom + 40, 1100));
+
+        const cvs = document.createElement('canvas');
+        cvs.width = Math.round(850 * thumbScale);
+        cvs.height = Math.round(captureH * thumbScale);
+        const ctx = cvs.getContext('2d');
+
+        ctx.fillStyle = '#d1d5db';
+        ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+        const cols = (projectData && projectData.columns) || 1;
+        const defGrid = getDefaultGrid(cols, 20);
+        const colWidths = (projectData && projectData.colWidths && projectData.colWidths.length === cols) ? projectData.colWidths : defGrid.colWidths;
+        const gapWidths = (projectData && projectData.gapWidths) ? projectData.gapWidths : defGrid.gapWidths;
+
+        let curX = 0;
+        for (let i = 0; i < colWidths.length; i++) {
+          let cW = colWidths[i];
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(curX * thumbScale, 0, cW * thumbScale, cvs.height);
+          curX += cW;
+          if (i < gapWidths.length) curX += gapWidths[i];
+        }
+
+        for (const b of blocks) {
+          if (b.y > captureH) continue;
+          const bx = b.x * thumbScale;
+          const by = b.y * thumbScale;
+          const bw = b.w * thumbScale;
+          const bh = b.h * thumbScale;
+
+          if (b.type === 'gif' && b.src) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(bx, by, bw, bh);
+            ctx.clip();
+            ctx.fillStyle = '#fcfcfc';
+            ctx.fillRect(bx, by, bw, bh);
+            const gImg = await loadImageElement(b.src);
+            if (gImg) {
+              const iW = gImg.naturalWidth || gImg.width;
+              const iH = gImg.naturalHeight || gImg.height;
+              const iRatio = iW / iH;
+              const bRatio = bw / bh;
+              let dW, dH, oX, oY;
+              if (iRatio > bRatio) {
+                dW = bw; dH = bw / iRatio; oX = 0; oY = (bh - dH) / 2;
+              } else {
+                dH = bh; dW = bh * iRatio; oX = (bw - dW) / 2; oY = 0;
+              }
+              ctx.drawImage(gImg, bx + oX, by + oY, dW, dH);
+            }
+            ctx.restore();
+          } else {
+            await drawBlockOnMasterCtx(ctx, b, thumbScale);
+          }
+
+          ctx.strokeStyle = 'rgba(176, 181, 188, 0.45)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+        }
+
+        return cvs.toDataURL('image/png');
+      } catch (err) {
+        console.warn("Error creando miniatura:", err);
+        return '';
+      }
+    }
+
+    function takeScreenshot(projectId, callback) {
+      const currentData = {
+        columns: currentColumns,
+        colWidths: [...currentColWidths],
+        gapWidths: [...currentGapWidths],
+        blocks: serializeBlocksFromDOM()
+      };
+      generateThumbnailFromProjectData(currentData).then(base64 => callback(base64));
+    }
+
+    async function renderRecents() {
+      let recents = safeJSONParse('bmail_recents', []);
+      let grid = document.getElementById('recent-projects-grid');
+      if(!grid) return; 
+      grid.innerHTML = '';
+      
+      let updatedAny = false;
+
+      for (let i = 0; i < recents.length; i++) {
+         let r = recents[i];
+         let card = document.createElement('div'); 
+         card.className = 'recent-card';
+
+         if (r.thumbVersion !== 3) {
+            let projData = r.data;
+            if ((!projData || !projData.blocks) && r.filePath && typeof fs !== 'undefined' && fs.existsSync(r.filePath)) {
+               try { projData = JSON.parse(fs.readFileSync(r.filePath, 'utf-8')); } catch(e) {}
+            }
+            if (projData && projData.blocks) {
+               const newBase64 = await generateThumbnailFromProjectData(projData);
+               if (newBase64) {
+                  if (userDataPath && typeof fs !== 'undefined') {
+                     let tPath = r.thumbPath || path.join(userDataPath, 'thumbnails', (r.id || Date.now()) + '.png');
+                     try {
+                        fs.writeFileSync(tPath, newBase64.replace(/^data:image\/png;base64,/, ""), 'base64');
+                        r.thumbPath = tPath;
+                     } catch(e) {}
+                  } else {
+                     r.thumbBase64 = newBase64;
+                  }
+                  r.thumbVersion = 3;
+                  updatedAny = true;
+               }
+            }
+         }
+         
+         let imgSrc = '';
+         if (r.thumbPath && typeof fs !== 'undefined' && fs.existsSync(r.thumbPath)) {
+            imgSrc = `file:///${r.thumbPath.replace(/\\/g, '/')}?t=${Date.now()}`;
+         } else if (r.thumbBase64) {
+            imgSrc = r.thumbBase64;
+         }
+
+         let thumbHtml = imgSrc 
+            ? `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover; object-position:top center; background:#d1d5db; display:block;" onerror="this.style.display='none';">` 
+            : '<div style="font-size:40px; color:#444; display:flex; align-items:center; justify-content:center; height:100%;"><span class="ms-icon" style="font-size:42px; opacity:0.35;">description</span></div>';
+         
+         card.innerHTML = `
+            <div class="recent-thumb" style="padding:6px 10px 0 10px; box-sizing:border-box;">
+              <div style="width:100%; height:100%; border-radius:6px 6px 0 0; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+                ${thumbHtml}
+              </div>
+            </div>
+            <div class="recent-info">
+                <span class="recent-name">${r.name}</span>
+                <span class="recent-date">${r.date}</span>
+            </div>
+         `;
+         card.onclick = () => {
+            if(r.filePath && typeof fs !== 'undefined' && fs.existsSync(r.filePath)) {
+               const content = fs.readFileSync(r.filePath, 'utf-8');
+               loadProjectIntoTab(r.filePath, JSON.parse(content));
+            } else {
+               loadProjectIntoTab(r.name, r.data); 
+            }
+         };
+         grid.appendChild(card);
+      }
+
+      if (updatedAny) {
+         localStorage.setItem('bmail_recents', JSON.stringify(recents));
+      }
+    }
+
+    function serializeBlocksFromDOM() {
+      return Array.from(document.querySelectorAll('.block')).map(b => ({
+        type: b.dataset.type, 
+        x: b.style.left, 
+        y: b.style.top, 
+        w: b.style.width, 
+        h: b.style.height,
+        src: b.dataset.src || '', 
+        href: b.dataset.href || '',
+        html: b.querySelector('.block-text') ? b.querySelector('.block-text').innerHTML : '',
+        css: b.querySelector('.block-text') ? b.querySelector('.block-text').style.cssText : '', 
+        selected: b.classList.contains('selected')
+      }));
+    }
+
+    async function saveActiveProject(forceSaveAs) {
+      if (activeProjectIndex < 0) return false;
+      
+      if(!isRestoring) {
+          historyArr = historyArr.slice(0, historyIndex + 1);
+          let currentState = serializeBlocksFromDOM();
+          historyArr.push(currentState);
+          if (historyArr.length > 20) { historyArr.shift(); } else { historyIndex++; }
+      }
+      
+      let p = projects[activeProjectIndex];
+      p.blocks = historyArr[historyIndex];
+      p.columns = currentColumns;
+      p.colWidths = [...currentColWidths];
+      p.gapWidths = [...currentGapWidths];
+      const projectData = { 
+        subject: p.subject, 
+        blocks: p.blocks, 
+        columns: p.columns,
+        colWidths: p.colWidths,
+        gapWidths: p.gapWidths
+      };
+      
+      if (!ipcRenderer) return false; 
+
+      let finalPath = p.filePath;
+      if (forceSaveAs || !finalPath) {
+          let defaultName = (p.name !== 'Sin Título' ? p.name : (p.subject.trim() || 'Mi_Proyecto')) + '.bmail';
+          const result = await ipcRenderer.invoke('show-save-dialog', { 
+              title: 'Guardar Proyecto', 
+              defaultPath: defaultName, 
+              filters: [{ name: 'Proyecto BlockMail', extensions: ['bmail'] }] 
+          });
+          if (result.canceled || !result.filePath) return false;
+          finalPath = result.filePath;
+      }
+      
+      const fileName = typeof path !== 'undefined' ? path.basename(finalPath, '.bmail') : 'Proyecto'; 
+      await ipcRenderer.invoke('save-file', finalPath, JSON.stringify(projectData));
+
+      p.name = fileName; 
+      p.filePath = finalPath; 
+      p.unsaved = false; 
+      renderTabs();
+      showSalsaToast("Proyecto guardado", `"${fileName}.bmail" se guardó correctamente.`, "success");
+
+      takeScreenshot(p.id, (base64Img) => {
+          let recents = safeJSONParse('bmail_recents', []);
+          recents = recents.filter(r => r.filePath !== finalPath && r.id !== p.id); 
+          
+          let thumbPath = '';
+          if (base64Img && userDataPath && typeof fs !== 'undefined') {
+              thumbPath = path.join(userDataPath, 'thumbnails', p.id + '.png');
+              try { fs.writeFileSync(thumbPath, base64Img.replace(/^data:image\/png;base64,/, ""), 'base64'); } catch(e) {}
+          }
+          
+          recents.unshift({ 
+              id: p.id,
+              name: fileName,
+              filePath: finalPath,
+              data: projectData, 
+              date: new Date().toLocaleDateString(),
+              thumbPath: thumbPath,
+              thumbVersion: 3
+          });
+          
+          if(recents.length > 10) recents = recents.slice(0, 10);
+          localStorage.setItem('bmail_recents', JSON.stringify(recents));
+          renderRecents();
+      });
+      return true;
+    }
+
+    function handleProjectUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try { loadProjectIntoTab(file.name, JSON.parse(e.target.result)); } 
+        catch (err) { showSalsaToast("Archivo inválido", "El archivo seleccionado no es un proyecto válido.", "error"); }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    async function triggerLoadProject() { 
+      if (!ipcRenderer) { document.getElementById('project-upload').click(); return; }
+      const result = await ipcRenderer.invoke('show-open-dialog', { 
+          filters: [{ name: 'Proyecto BlockMail', extensions: ['bmail'] }] 
+      });
+      if (result.canceled || result.filePaths.length === 0) return;
+      try { 
+          loadProjectIntoTab(result.filePaths[0], JSON.parse(fs.readFileSync(result.filePaths[0], 'utf-8'))); 
+      } catch (err) { showSalsaToast("Archivo inválido", "No se pudo abrir el proyecto seleccionado.", "error"); }
+    }
+// ==========================================
+    // CORE EDITOR (SELECCIÓN Y PROPIEDADES)
+    // ==========================================
+    const selectionBox = document.getElementById('selection-box'); 
+    const multiSelectionBox = document.getElementById('multi-selection-box'); 
+    const propertiesPanel = document.getElementById('properties-panel'); 
+    const singleProperties = document.getElementById('single-properties'); 
+    const multiSelectMsg = document.getElementById('multi-select-msg'); 
+    const propX = document.getElementById('prop-x'), propY = document.getElementById('prop-y');
+    const propW = document.getElementById('prop-w'), propH = document.getElementById('prop-h'); 
+    
+    let selectedBlocks = new Set(); 
+    let clipboard = []; 
+    let savedRange = null; 
+
+    window.onload = function() {
+      setAppTheme(currentAppTheme, true);
+      renderPalette();
+      renderRecents();
+    };
+
+    function updateCanvasHeight() { 
+      let maxBottom = 800; 
+      document.querySelectorAll('.block').forEach(block => { 
+          let bottom = parseInt(block.style.top || 0) + block.offsetHeight; 
+          if (bottom > maxBottom) maxBottom = bottom; 
+      }); 
+      canvas.style.height = (maxBottom + 200) + 'px'; 
+    }
+    const canvasObserver = new MutationObserver(updateCanvasHeight); 
+    canvasObserver.observe(canvas, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+
+    function updateMultiSelectionBoundingBox() { 
+      if (selectedBlocks.size <= 1) { 
+          multiSelectionBox.style.display = 'none'; 
+          document.body.classList.remove('multi-selection-active'); 
+          return; 
+      } 
+      let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0; 
+      selectedBlocks.forEach(b => { 
+          let l = parseInt(b.style.left || 0), t = parseInt(b.style.top || 0); 
+          let r = l + b.offsetWidth, bot = t + b.offsetHeight; 
+          if (l < minX) minX = l; if (t < minY) minY = t; 
+          if (r > maxX) maxX = r; if (bot > maxY) maxY = bot; 
+      }); 
+      multiSelectionBox.style.display = 'block'; 
+      multiSelectionBox.style.left = minX + 'px'; 
+      multiSelectionBox.style.top = minY + 'px'; 
+      multiSelectionBox.style.width = (maxX - minX) + 'px'; 
+      multiSelectionBox.style.height = (maxY - minY) + 'px'; 
+      document.body.classList.add('multi-selection-active'); 
+    }
+
+    function clearSelection() { 
+        selectedBlocks.forEach(block => { 
+            block.classList.remove('selected'); 
+            const textContent = block.querySelector('.block-text'); 
+            if (textContent) { textContent.classList.remove('editing'); textContent.contentEditable = false; } 
+        }); 
+        selectedBlocks.clear(); 
+        updatePropertiesUI(); 
+        updateMultiSelectionBoundingBox(); 
+    }
+
+    function addToSelection(block) { 
+        if (isColEditMode) toggleColumnEditMode();
+        selectedBlocks.add(block); block.classList.add('selected'); 
+        updatePropertiesUI(); updateMultiSelectionBoundingBox(); 
+    }
+
+    function removeFromSelection(block) { 
+        selectedBlocks.delete(block); block.classList.remove('selected'); 
+        const textContent = block.querySelector('.block-text'); 
+        if (textContent) { textContent.classList.remove('editing'); textContent.contentEditable = false; } 
+        updatePropertiesUI(); updateMultiSelectionBoundingBox(); 
+    }
+
+    function updatePropertiesUI() { 
+      document.body.classList.toggle('single-selection', selectedBlocks.size === 1);
+      if (isColEditMode) {
+          propertiesPanel.style.display = 'none';
+          return;
+      }
+      if (selectedBlocks.size === 0) { 
+          propertiesPanel.style.display = 'none'; 
+      } else if (selectedBlocks.size === 1) { 
+        propertiesPanel.style.display = 'block'; multiSelectMsg.style.display = 'none'; singleProperties.style.display = 'block'; 
+        let block = Array.from(selectedBlocks)[0]; 
+        propX.value = parseInt(block.style.left || 0); propY.value = parseInt(block.style.top || 0); 
+        propW.value = block.offsetWidth; propH.value = block.offsetHeight; 
+        
+        const type = block.dataset.type; 
+        document.getElementById('media-properties').style.display = (type === 'image' || type === 'gif') ? 'block' : 'none';
+        document.getElementById('text-props').style.display = (type === 'text') ? 'block' : 'none';
+
+        if (type === 'image' || type === 'gif') { 
+            document.getElementById('image-props').style.display = (type === 'image') ? 'block' : 'none'; 
+            document.getElementById('gif-props').style.display = (type === 'gif') ? 'block' : 'none'; 
+            if (type === 'image') document.getElementById('image-url').value = block.dataset.src || ''; 
+            if (type === 'gif') document.getElementById('gif-url').value = block.dataset.src || ''; 
+            document.getElementById('prop-href').value = block.dataset.href || ''; 
+        } else if (type === 'text') { 
+            let tEl = block.querySelector('.block-text'); 
+            if (tEl) { 
+                let compStyle = window.getComputedStyle(tEl); 
+                document.getElementById('prop-font-size').value = parseInt(tEl.style.fontSize || compStyle.fontSize) || 14; 
+                document.getElementById('prop-line-height').value = parseInt(tEl.style.lineHeight || compStyle.lineHeight) || 20; 
+                document.getElementById('prop-padding-top').value = parseInt(tEl.style.paddingTop || compStyle.paddingTop) || 10; 
+                document.getElementById('prop-padding-sides').value = parseInt(tEl.style.paddingLeft || compStyle.paddingLeft) || 15; 
+            } 
+        }
+      } else { 
+          propertiesPanel.style.display = 'block'; 
+          multiSelectMsg.style.display = 'block'; 
+          singleProperties.style.display = 'none'; 
+      } 
+    }
+
+    function saveState() {
+      if (isRestoring) return;
+      historyArr = historyArr.slice(0, historyIndex + 1);
+      let currentState = serializeBlocksFromDOM();
+      historyArr.push(currentState); 
+      if (historyArr.length > 20) { historyArr.shift(); } else { historyIndex++; } 
+      markUnsaved(); 
+    }
+    
+    function loadState(state) { 
+        isRestoring = true; 
+        document.querySelectorAll('.block').forEach(b => b.remove()); 
+        selectedBlocks.clear(); 
+        if (state) { 
+            state.forEach(item => {
+                if (item.type === 'shape') return;
+                let b = addBlock(item.type, item);
+                if (item.selected) addToSelection(b);
+            }); 
+        } 
+        updateCanvasHeight(); updatePropertiesUI(); isRestoring = false; 
+    }
+    
+    function undo() { if (historyIndex > 0) { historyIndex--; loadState(historyArr[historyIndex]); markUnsaved(); } }
+    function redo() { if (historyIndex < historyArr.length - 1) { historyIndex++; loadState(historyArr[historyIndex]); markUnsaved(); } }
+
+    function updateSelectedBlock(source) { 
+      if (selectedBlocks.size !== 1) return; 
+      let block = Array.from(selectedBlocks)[0]; 
+      let minH = block.dataset.type === 'spacer' ? 10 : 20; 
+      let oldW = block.offsetWidth; let oldH = block.offsetHeight; 
+      let oldX = parseInt(block.style.left || 0); let oldY = parseInt(block.style.top || 0); 
+      let newW = parseInt(propW.value) || 20; let newX = parseInt(propX.value) || 0; 
+      let newY = parseInt(propY.value) || 0; let newH = parseInt(propH.value) || minH; 
+      
+      if (newW < 20) newW = 20; if (newH < minH) newH = minH; 
+      if (source === 'w') { newX = oldX - (newW - oldW) / 2; propX.value = Math.round(newX); } 
+      if (source === 'h') { newY = oldY - (newH - oldH) / 2; propY.value = Math.round(newY); } 
+      if (newW > 850) newW = 850; if (newX + newW > 850) newX = 850 - newW; 
+      if (newX < 0) newX = 0; if (newY < 0) newY = 0; 
+      
+      block.style.width = newW + 'px'; block.style.height = newH + 'px'; 
+      block.style.left = newX + 'px'; block.style.top = newY + 'px'; 
+      updateCanvasHeight(); 
+    }
+    
+    function updateMediaLink() { 
+        if (selectedBlocks.size !== 1) return; 
+        Array.from(selectedBlocks)[0].dataset.href = document.getElementById('prop-href').value.trim(); 
+        saveState(); 
+    }
+    
+    function alignBlock(alignment) { 
+        if (selectedBlocks.size === 0) return; 
+        selectedBlocks.forEach(block => { 
+            let w = block.offsetWidth; 
+            if (alignment === 'left') block.style.left = '0px'; 
+            else if (alignment === 'center') block.style.left = Math.round((850 - w) / 2) + 'px'; 
+            else if (alignment === 'right') block.style.left = (850 - w) + 'px'; 
+        }); 
+        updatePropertiesUI(); saveState(); 
+    }
+    
+    function updateTextProperties() { 
+      if (selectedBlocks.size !== 1) return; 
+      let block = Array.from(selectedBlocks)[0]; 
+      if (block.dataset.type !== 'text') return; 
+      let tEl = block.querySelector('.block-text'); 
+      tEl.style.fontFamily = document.getElementById('prop-font-family').value; 
+      tEl.style.fontSize = document.getElementById('prop-font-size').value + 'px'; 
+      tEl.style.lineHeight = document.getElementById('prop-line-height').value + 'px'; 
+      tEl.style.paddingTop = document.getElementById('prop-padding-top').value + 'px'; 
+      tEl.style.paddingLeft = document.getElementById('prop-padding-sides').value + 'px'; 
+      tEl.style.paddingRight = document.getElementById('prop-padding-sides').value + 'px'; 
+      saveState(); 
+    }
+    
+    function updateTextAlign(align) { 
+        if (selectedBlocks.size === 0) return; 
+        selectedBlocks.forEach(block => { if (block.dataset.type === 'text') block.querySelector('.block-text').style.textAlign = align; }); 
+        saveState(); 
+    }
+    
+    function updateTextVAlign(align) { 
+        if (selectedBlocks.size === 0) return; 
+        selectedBlocks.forEach(block => { 
+            if (block.dataset.type === 'text') { 
+                let tEl = block.querySelector('.block-text'); 
+                tEl.style.display = 'flex'; 
+                tEl.style.flexDirection = 'column'; 
+                tEl.style.justifyContent = align; 
+            } 
+        }); 
+        saveState(); 
+    }
+
+    // ==========================================
+    // PALETAS DE COLORES (ASE Y MANUALES)
+    // ==========================================
+    let customPalette = safeJSONParse('bmail_palette', ['#000000', '#fcfcfc', '#808080', '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6']);
+    let asePalettes = safeJSONParse('bmail_ase_palettes', []);
+
+    function renderPalette() {
+      if(!Array.isArray(customPalette)) customPalette = []; 
+      const container = document.getElementById('palette-container'); container.innerHTML = '';
+      
+      customPalette.forEach((c, index) => { 
+          let div = document.createElement('div'); div.className = 'swatch'; div.style.backgroundColor = c; div.title = c; 
+          div.onmousedown = function(e) { e.preventDefault(); if (e.button === 2 || e.which === 3) { customPalette.splice(index, 1); savePalette(); renderPalette(); } else { inlineFormat('foreColor', c); } }; 
+          div.oncontextmenu = function(e) { e.preventDefault(); }; 
+          container.appendChild(div); 
+      });
+      
+      if(!Array.isArray(asePalettes)) asePalettes = []; 
+      const aseContainer = document.getElementById('ase-palettes-container'); aseContainer.innerHTML = '';
+      
+      asePalettes.forEach((pal, pIndex) => {
+        let palDiv = document.createElement('div'); palDiv.style.marginBottom = '10px'; 
+        let titleContainer = document.createElement('div'); titleContainer.style.display = 'flex'; titleContainer.style.justifyContent = 'space-between'; titleContainer.style.alignItems = 'center'; titleContainer.style.marginBottom = '5px';
+        
+        let titleText = document.createElement('span'); titleText.textContent = '🎨 ' + pal.name; titleText.style.fontSize = '12px'; titleText.style.color = '#0d99ff'; titleText.style.fontWeight = 'bold';
+        
+        let delBtn = document.createElement('span'); delBtn.textContent = '🗑️'; delBtn.title = 'Eliminar paleta completa'; delBtn.style.cursor = 'pointer'; delBtn.style.fontSize = '12px'; 
+        delBtn.onclick = () => {
+          showSalsaConfirm('Eliminar paleta', `¿Querés eliminar la paleta "${pal.name}"?`, () => {
+            asePalettes.splice(pIndex, 1);
+            savePalette();
+            renderPalette();
+            showSalsaToast("Paleta eliminada", `Se quitó "${pal.name}" de tus paletas.`, "info");
+          });
+        };
+        
+        titleContainer.appendChild(titleText); titleContainer.appendChild(delBtn); 
+        
+        let swatchesDiv = document.createElement('div'); swatchesDiv.style.cssText = 'display:flex; gap:6px; flex-wrap:wrap; background: var(--md-surface); padding: 8px; border: 1px solid var(--md-border); border-radius: 6px;';
+        
+        pal.colors.forEach((c, cIndex) => { 
+            let div = document.createElement('div'); div.className = 'swatch'; div.style.backgroundColor = c; div.title = c; 
+            div.onmousedown = function(e) { e.preventDefault(); if (e.button === 2 || e.which === 3) { pal.colors.splice(cIndex, 1); if (pal.colors.length === 0) asePalettes.splice(pIndex, 1); savePalette(); renderPalette(); } else { inlineFormat('foreColor', c); } }; 
+            div.oncontextmenu = function(e) { e.preventDefault(); }; 
+            swatchesDiv.appendChild(div); 
+        });
+        palDiv.appendChild(titleContainer); palDiv.appendChild(swatchesDiv); aseContainer.appendChild(palDiv);
+      });
+    }
+
+    function addCustomColor() { 
+        let c = document.getElementById('new-color-picker').value; 
+        if (!customPalette.includes(c)) { customPalette.push(c); savePalette(); renderPalette(); } 
+    }
+    
+    function savePalette() { 
+        localStorage.setItem('bmail_palette', JSON.stringify(customPalette)); 
+        localStorage.setItem('bmail_ase_palettes', JSON.stringify(asePalettes)); 
+    }
+    
+    function rgbToHex(rgb) { 
+        if (!rgb || rgb.startsWith('#')) return rgb || '#000000'; 
+        let m = rgb.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i); 
+        if (m) return "#" + ("0" + parseInt(m[1],10).toString(16)).slice(-2) + ("0" + parseInt(m[2],10).toString(16)).slice(-2) + ("0" + parseInt(m[3],10).toString(16)).slice(-2); 
+        return '#000000'; 
+    }
+
+    function loadASEFile(e) {
+      const file = e.target.files[0]; if (!file) return; 
+      const fileName = file.name; const reader = new FileReader();
+      
+      reader.onload = function(event) {
+        let buffer = event.target.result; let data = new DataView(buffer); let offset = 0; let colorsFound = [];
+        try {
+          if (data.getUint32(offset) !== 0x41534546) throw new Error("No es ASEF"); 
+          offset += 12; let numBlocks = data.getUint32(offset); offset += 4;
+          
+          for (let i = 0; i < numBlocks; i++) {
+            let blockType = data.getUint16(offset); offset += 2; 
+            let blockLength = data.getUint32(offset); offset += 4; 
+            let blockEnd = offset + blockLength;
+            
+            if (blockType === 0x0001) {
+              let nameLen = data.getUint16(offset); offset += 2; offset += nameLen * 2; 
+              let model = ""; for(let m=0; m<4; m++) { model += String.fromCharCode(data.getUint8(offset++)); }
+              
+              if (model === "RGB ") { 
+                  let r = Math.round(data.getFloat32(offset) * 255); offset += 4; 
+                  let g = Math.round(data.getFloat32(offset) * 255); offset += 4; 
+                  let b = Math.round(data.getFloat32(offset) * 255); offset += 4; 
+                  colorsFound.push(rgbToHex(`rgb(${r},${g},${b})`)); 
+              } else if (model === "CMYK") { 
+                  let c = data.getFloat32(offset); offset += 4; 
+                  let m = data.getFloat32(offset); offset += 4; 
+                  let y = data.getFloat32(offset); offset += 4; 
+                  let k = data.getFloat32(offset); offset += 4; 
+                  let r = Math.round(255 * (1 - c) * (1 - k)); 
+                  let g = Math.round(255 * (1 - m) * (1 - k)); 
+                  let b = Math.round(255 * (1 - y) * (1 - k)); 
+                  colorsFound.push(rgbToHex(`rgb(${r},${g},${b})`)); 
+              }
+            } 
+            offset = blockEnd;
+          }
+          if (colorsFound.length > 0) { 
+              let uniqueColors = [...new Set(colorsFound)]; 
+              asePalettes.push({ name: fileName, colors: uniqueColors }); 
+              savePalette(); renderPalette(); 
+              showSalsaToast("Paleta ASE importada", `Se cargaron ${uniqueColors.length} colores de "${fileName}".`, "success"); 
+          } else { 
+              showSalsaToast("Sin colores", "No se encontraron muestras compatibles en el archivo.", "error"); 
+          }
+        } catch(err) { showSalsaToast("Archivo inválido", "El archivo seleccionado no tiene un formato .ase válido.", "error"); }
+      }; 
+      reader.readAsArrayBuffer(file); e.target.value = '';
+    }
+
+    document.addEventListener('selectionchange', () => { 
+        const active = document.activeElement; 
+        if (active && active.classList.contains('editing')) { 
+            const sel = window.getSelection(); 
+            if (sel.rangeCount > 0) savedRange = sel.getRangeAt(0); 
+        } 
+    });
+
+    function inlineFormat(command, value = null) {
+      const active = document.activeElement; let textIsSelected = false; const sel = window.getSelection();
+      
+      if (active && active.classList.contains('editing')) { 
+          if (sel.toString().length > 0) textIsSelected = true; 
+      } else if (savedRange && selectedBlocks.size === 1) {
+         let block = Array.from(selectedBlocks)[0]; let textEl = block.querySelector('.block-text');
+         if (textEl && textEl.contains(savedRange.commonAncestorContainer)) { 
+             sel.removeAllRanges(); sel.addRange(savedRange); 
+             if (sel.toString().length > 0) textIsSelected = true; 
+         }
+      }
+      
+      if (command === 'foreColor' && !textIsSelected && selectedBlocks.size > 0) { 
+          selectedBlocks.forEach(block => { 
+              if (block.dataset.type === 'text') { 
+                  let textEl = block.querySelector('.block-text'); 
+                  if (textEl) { 
+                      textEl.style.color = value; 
+                      textEl.querySelectorAll('*').forEach(child => { if (child.style.color) child.style.color = ''; }); 
+                  } 
+              } 
+          }); 
+      } else { 
+          document.execCommand(command, false, value); 
+      }
+      
+      if (value !== null && document.getElementById('inline-color')) document.getElementById('inline-color').value = value;
+      saveState();
+    }
+
+    // ==========================================
+    // ATAJOS DE TECLADO
+    // ==========================================
+    document.addEventListener('keydown', function(e) { 
+      if (document.activeElement.isContentEditable || document.activeElement.tagName === 'INPUT') return; 
+      
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { if (e.shiftKey) redo(); else undo(); e.preventDefault(); return; } 
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { redo(); e.preventDefault(); return; } 
+      
+      if (e.key === 'Delete' || e.key === 'Backspace') { 
+          if(selectedBlocks.size > 0) { 
+              selectedBlocks.forEach(block => block.remove()); 
+              selectedBlocks.clear(); 
+              updatePropertiesUI(); updateCanvasHeight(); saveState(); 
+          } 
+      } 
+      
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') { 
+          clipboard = []; 
+          selectedBlocks.forEach(b => { 
+              let tEl = b.querySelector('.block-text'); 
+              clipboard.push({ 
+                  type: b.dataset.type, w: b.offsetWidth, h: b.offsetHeight, 
+                  l: parseInt(b.style.left || 0), t: parseInt(b.style.top || 0), 
+                  src: b.dataset.src || '', href: b.dataset.href || '', 
+                  html: tEl ? tEl.innerHTML : '', css: tEl ? tEl.style.cssText : '' 
+              }); 
+          }); 
+      } 
+      
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') { 
+        if(clipboard.length === 0) return; 
+        clearSelection(); 
+        
+        clipboard.forEach(item => { 
+          let newBlock = addBlock(item.type); 
+          newBlock.style.width = item.w + 'px'; 
+          newBlock.style.height = item.h + 'px'; 
+          newBlock.style.left = Math.min(item.l + 20, 850 - item.w) + 'px'; 
+          newBlock.style.top = (item.t + 20) + 'px'; 
+          
+          if (item.type === 'image') { 
+              if(item.href) newBlock.dataset.href = item.href; 
+              if (item.src) { 
+                  newBlock.dataset.src = item.src; 
+                  newBlock.querySelector('.block-content').innerHTML = `<img src="${item.src}" style="width:100%; height:100%; object-fit:cover; pointer-events:none;">`; 
+              } 
+          } else if (item.type === 'gif') {
+              if(item.href) newBlock.dataset.href = item.href; 
+              if (item.src) { 
+                  newBlock.dataset.src = item.src; 
+                  newBlock.querySelector('.block-content').innerHTML = `<img src="${item.src}" style="width:100%; height:100%; object-fit:contain; background:#fcfcfc; pointer-events:none;">`; 
+              } 
+          } else if (item.type === 'text') { 
+              let tEl = newBlock.querySelector('.block-text'); 
+              tEl.innerHTML = item.html; 
+              if (item.css) tEl.style.cssText = item.css; 
+          }
+          addToSelection(newBlock); 
+        }); 
+        updateCanvasHeight(); saveState(); 
+      } 
+    });
+
+    // ==========================================
+    // SELECCIÓN MÚLTIPLE Y REDIMENSIÓN GRUPAL
+    // ==========================================
+    document.querySelectorAll('.multi-handle').forEach(handle => {
+      handle.addEventListener('mousedown', function(e) {
+        e.stopPropagation(); 
+        if (selectedBlocks.size <= 1) return; 
+        
+        let pos = handle.dataset.pos; 
+        let startX = e.clientX, startY = e.clientY; 
+        let groupItems = []; 
+        let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0; 
+        
+        selectedBlocks.forEach(b => { 
+            b.classList.add('resizing');
+            let l = parseInt(b.style.left || 0), t = parseInt(b.style.top || 0); 
+            let w = b.offsetWidth, h = b.offsetHeight; 
+            if (l < minX) minX = l; if (t < minY) minY = t; 
+            if (l + w > maxX) maxX = l + w; if (t + h > maxY) maxY = t + h; 
+            groupItems.push({ block: b, l, t, w, h }); 
+        }); 
+        
+        let origGroupW = maxX - minX; let origGroupH = maxY - minY; 
+        if (origGroupW === 0) origGroupW = 1; if (origGroupH === 0) origGroupH = 1; 
+        
+        function onMouseMove(moveEvent) { 
+          let dx = moveEvent.clientX - startX; let dy = moveEvent.clientY - startY; 
+          let newGroupW = origGroupW, newGroupH = origGroupH; 
+          let newGroupX = minX, newGroupY = minY; 
+          
+          if (pos.includes('e')) newGroupW = Math.max(40, origGroupW + dx); 
+          if (pos.includes('s')) newGroupH = Math.max(40, origGroupH + dy); 
+          if (pos.includes('w')) { let potentialW = origGroupW - dx; if (potentialW >= 40) { newGroupW = potentialW; newGroupX = minX + dx; } } 
+          if (pos.includes('n')) { let potentialH = origGroupH - dy; if (potentialH >= 40) { newGroupH = potentialH; newGroupY = minY + dy; } } 
+          
+          let scaleX = newGroupW / origGroupW; let scaleY = newGroupH / origGroupH; 
+          
+          groupItems.forEach(item => { 
+              let minH = item.block.dataset.type === 'spacer' ? 10 : 20; 
+              let relX = item.l - minX; let relY = item.t - minY; 
+              
+              let finalL = Math.round(newGroupX + (relX * scaleX)); 
+              let finalT = Math.round(newGroupY + (relY * scaleY)); 
+              let finalW = Math.max(20, Math.round(item.w * scaleX)); 
+              let finalH = Math.max(minH, Math.round(item.h * scaleY)); 
+              
+              if (finalL < 0) finalL = 0; if (finalL + finalW > 850) finalW = 850 - finalL; 
+              
+              item.block.style.left = finalL + 'px'; item.block.style.top = finalT + 'px'; 
+              item.block.style.width = finalW + 'px'; item.block.style.height = finalH + 'px'; 
+          }); 
+          updateMultiSelectionBoundingBox(); 
+        } 
+        function onMouseUp() {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          groupItems.forEach(item => item.block.classList.remove('resizing'));
+          updateCanvasHeight();
+          saveState();
+        } 
+        document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp); 
+      }); 
+    }); 
+
+    canvas.addEventListener('mousedown', function(e) { 
+      if (isColEditMode) return;
+      if (e.target !== canvas && e.target !== guidesContainer && !e.target.classList.contains('col-band')) return; 
+      if (!e.shiftKey) clearSelection(); 
+      
+      let rect = canvas.getBoundingClientRect(); 
+      let startX = e.clientX - rect.left, startY = e.clientY - rect.top; 
+      
+      selectionBox.style.display = 'block'; 
+      selectionBox.style.left = startX + 'px'; 
+      selectionBox.style.top = startY + 'px'; 
+      selectionBox.style.width = '0px'; 
+      selectionBox.style.height = '0px'; 
+      
+      function onMouseMoveBox(moveEvent) { 
+        let currentX = moveEvent.clientX - rect.left, currentY = moveEvent.clientY - rect.top; 
+        let left = Math.min(startX, currentX), top = Math.min(startY, currentY); 
+        let width = Math.abs(currentX - startX), height = Math.abs(currentY - startY); 
+        
+        selectionBox.style.left = left + 'px'; selectionBox.style.top = top + 'px'; 
+        selectionBox.style.width = width + 'px'; selectionBox.style.height = height + 'px'; 
+        
+        let selectRect = { left: left, top: top, right: left + width, bottom: top + height }; 
+        
+        document.querySelectorAll('.block').forEach(block => { 
+            let bL = parseInt(block.style.left || 0), bT = parseInt(block.style.top || 0); 
+            let bRect = { left: bL, top: bT, right: bL + block.offsetWidth, bottom: bT + block.offsetHeight }; 
+            
+            if (bRect.left < selectRect.right && bRect.right > selectRect.left && bRect.top < selectRect.bottom && bRect.bottom > selectRect.top) { 
+                addToSelection(block); 
+            } else if (!e.shiftKey) { 
+                removeFromSelection(block); 
+            } 
+        }); 
+      } 
+      function onMouseUpBox() { selectionBox.style.display = 'none'; document.removeEventListener('mousemove', onMouseMoveBox); document.removeEventListener('mouseup', onMouseUpBox); } 
+      document.addEventListener('mousemove', onMouseMoveBox); document.addEventListener('mouseup', onMouseUpBox); 
+    }); 
+
+    function checkOverlap(rect1, rect2) { return (rect1.left < rect2.right && rect1.right > rect2.left && rect1.top < rect2.bottom && rect1.bottom > rect2.top); } 
+    
+    function handleImageUpload(e) { 
+        const file = e.target.files[0]; if (!file || selectedBlocks.size !== 1) return; 
+        let block = Array.from(selectedBlocks)[0]; 
+        const reader = new FileReader(); 
+        reader.onload = function(event) { 
+            const base64 = event.target.result; 
+            block.dataset.src = base64; 
+            block.querySelector('.block-content').innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover; pointer-events:none;">`; 
+            const inputUrl = document.getElementById('image-url'); 
+            if (inputUrl) inputUrl.value = ''; 
+            saveState(); 
+            showSalsaToast("Imagen cargada", "La imagen local se adjuntó al bloque.", "info");
+        }; 
+        reader.readAsDataURL(file); e.target.value = ''; 
+    } 
+    
+    function handleImageURL(e) { 
+        let url = e.target.value.trim(); if (selectedBlocks.size !== 1) return; 
+        let block = Array.from(selectedBlocks)[0]; block.dataset.src = url; 
+        if (url) { 
+            block.querySelector('.block-content').innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover; pointer-events:none;">`; 
+        } else { 
+            block.querySelector('.block-content').innerHTML = '<span class="ms-icon" style="font-size:38px; opacity:0.3;">image</span>'; 
+        } 
+        saveState(); 
+    }
+    
+    function handleGifURL(e) { 
+        let url = e.target.value.trim(); if (selectedBlocks.size !== 1) return; 
+        let block = Array.from(selectedBlocks)[0]; 
+        if (url.includes('<iframe')) { 
+            const match = url.match(/src="([^"]+)"/); 
+            if (match && match[1]) { 
+                let embedUrl = match[1]; let parts = embedUrl.split('/'); let id = parts[parts.length - 1]; 
+                url = `https://media.giphy.com/media/${id}/giphy.gif`; 
+            } 
+        } else if (url.includes('giphy.com/gifs/')) { 
+            const parts = url.split('-'); const id = parts[parts.length - 1]; 
+            url = `https://media.giphy.com/media/${id}/giphy.gif`; 
+        } 
+        e.target.value = url; block.dataset.src = url; 
+        block.querySelector('.block-content').innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:contain; background:#fcfcfc; pointer-events:none;">`; 
+        saveState(); 
+    } 
+    
+    function getLowestPoint() { 
+        let lowestY = 0; 
+        document.querySelectorAll('.block').forEach(block => { 
+            let bottomEdge = parseInt(block.style.top || 0) + block.offsetHeight; 
+            if (bottomEdge > lowestY) lowestY = bottomEdge; 
+        }); 
+        return lowestY; 
+    } 
+
+    // ==========================================
+    // CREACIÓN, ARRASTRE LIBRE E INSERCIÓN INTELIGENTE
+    // ==========================================
+    function addBlock(type, restoreData = null) { 
+      if (isColEditMode) toggleColumnEditMode();
+      const block = document.createElement('div'); block.className = 'block'; block.dataset.type = type; let minH = type === 'spacer' ? 10 : 20; 
+      block.style.backgroundColor = '#fcfcfc'; 
+
+      if (restoreData) { 
+          block.style.left = restoreData.x || '0px'; 
+          block.style.top = restoreData.y || getLowestPoint() + 'px'; 
+          block.style.width = restoreData.w; 
+          block.style.height = restoreData.h; 
+          if(restoreData.src) block.dataset.src = restoreData.src; 
+          if(restoreData.href) block.dataset.href = restoreData.href; 
+      } else { 
+          block.style.left = '0px'; 
+          block.style.top = getLowestPoint() + 'px'; 
+          block.style.width = columnWidth + 'px'; 
+      } 
+      
+      const deleteBtn = document.createElement('button'); deleteBtn.className = 'delete-btn'; deleteBtn.innerHTML = '✕'; 
+      deleteBtn.onclick = function(e) { e.stopPropagation(); removeFromSelection(block); block.remove(); updateCanvasHeight(); updateMultiSelectionBoundingBox(); saveState(); }; 
+      block.appendChild(deleteBtn); 
+      
+      if (type === 'image') { 
+          if (!restoreData) block.style.height = '150px'; 
+          const content = document.createElement('div'); content.className = 'block-content bg-image'; 
+          if (restoreData && restoreData.src) { 
+              content.innerHTML = `<img src="${restoreData.src}" style="width:100%; height:100%; object-fit:cover; pointer-events:none;">`; 
+          } else { 
+              content.innerHTML = '<span class="ms-icon" style="font-size:38px; opacity:0.3;">image</span>'; 
+          } 
+          block.appendChild(content); 
+      } else if (type === 'text') { 
+          if (!restoreData) block.style.height = '100px'; 
+          const content = document.createElement('div'); content.className = 'block-text'; content.style.backgroundColor = '#fcfcfc'; 
+          if (restoreData) { 
+              content.style.cssText = restoreData.css; content.style.backgroundColor = '#fcfcfc'; if(!content.style.color) content.style.color = '#000000'; content.innerHTML = restoreData.html; 
+          } else { 
+              content.style.fontFamily = 'Arial, sans-serif'; content.style.fontSize = '14px'; content.style.lineHeight = '20px'; content.style.color = '#000000'; content.style.textAlign = 'left'; content.style.display = 'flex'; content.style.flexDirection = 'column'; content.style.justifyContent = 'flex-start'; content.style.paddingTop = '10px'; content.style.paddingBottom = '10px'; content.style.paddingLeft = '15px'; content.style.paddingRight = '15px'; content.innerHTML = '<div style="text-align:center;"><span class="ms-icon" style="font-size:32px; opacity:0.25;">title</span></div>'; 
+          } 
+          block.addEventListener('dblclick', function(e) { if (selectedBlocks.size === 1) { content.contentEditable = true; content.classList.add('editing'); if (content.innerHTML.includes('icon-text.png') || content.innerHTML.includes('ms-icon')) content.innerHTML = ''; content.focus(); } }); 
+          content.addEventListener('blur', function() { content.contentEditable = false; content.classList.remove('editing'); if (content.innerHTML.trim() === '' || content.innerHTML === '<br>') { content.innerHTML = '<div style="text-align:center;"><span class="ms-icon" style="font-size:32px; opacity:0.25;">title</span></div>'; } saveState(); }); 
+          content.addEventListener('paste', function(e) { e.preventDefault(); let text = (e.clipboardData || window.clipboardData).getData('text/plain'); document.execCommand('insertText', false, text); saveState(); }); 
+          block.appendChild(content); 
+      } else if (type === 'gif') { 
+          if (!restoreData) block.style.height = '150px'; 
+          const content = document.createElement('div'); content.className = 'block-content bg-gif'; 
+          if (restoreData && restoreData.src) { 
+              content.innerHTML = `<img src="${restoreData.src}" style="width:100%; height:100%; object-fit:contain; background:#fcfcfc; pointer-events:none;">`; 
+          } else { 
+              content.innerHTML = '<span class="ms-icon" style="font-size:38px; opacity:0.3;">gif_box</span>'; 
+          } 
+          block.appendChild(content); 
+      } else if (type === 'spacer') { 
+          if (!restoreData) block.style.height = '30px'; 
+          const content = document.createElement('div'); content.className = 'block-content bg-spacer'; content.innerHTML = '<span class="ms-icon" style="font-size:24px; opacity:0.25;">table_rows</span>'; block.appendChild(content); 
+      } 
+
+      const handlePositions = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']; 
+      handlePositions.forEach(pos => { 
+          const handle = document.createElement('div'); handle.className = `resize-handle ${pos}`; 
+          handle.addEventListener('mousedown', function(e) { 
+              e.stopPropagation(); if (!selectedBlocks.has(block)) { clearSelection(); addToSelection(block); } 
+              block.classList.add('resizing');
+              let startX = e.clientX, startY = e.clientY; let startW = block.offsetWidth, startH = block.offsetHeight; let startL = parseInt(block.style.left || 0), startT = parseInt(block.style.top || 0); 
+              
+              function onMouseMove(moveEvent) { 
+                  let snapThreshold = moveEvent.altKey ? 0 : 10; 
+                  let dx = moveEvent.clientX - startX, dy = moveEvent.clientY - startY; 
+                  let newW = startW, newH = startH, newL = startL, newT = startT; 
+                  let otherBlocks = Array.from(document.querySelectorAll('.block')).filter(b => b !== block); 
+                  
+                  if (pos.includes('e')) newW = startW + dx; if (pos.includes('w')) { newW = startW - dx; newL = startL + dx; } 
+                  if (pos.includes('s')) newH = startH + dy; if (pos.includes('n')) { newH = startH - dy; newT = startT + dy; } 
+                  
+                  if (snapThreshold > 0) { 
+                      gridGuides.forEach(guide => { 
+                          if (pos.includes('e') && Math.abs((newL + newW) - guide) < snapThreshold) newW = guide - newL; 
+                          if (pos.includes('w') && Math.abs(newL - guide) < snapThreshold) { newW += (newL - guide); newL = guide; } 
+                      }); 
+                  } 
+                  
+                  otherBlocks.forEach(other => { 
+                      let oL = parseInt(other.style.left || 0), oT = parseInt(other.style.top || 0); let oR = oL + other.offsetWidth, oB = oT + other.offsetHeight; 
+                      if (pos.includes('s')) { if (Math.abs((newT + newH) - oT) < snapThreshold) newH = oT - newT; else if (Math.abs((newT + newH) - oB) < snapThreshold) newH = oB - newT; } 
+                      if (pos.includes('n')) { if (Math.abs(newT - oB) < snapThreshold) { newH += (newT - oB); newT = oB; } else if (Math.abs(newT - oT) < snapThreshold) { newH += (newT - oT); newT = oT; } } 
+                  }); 
+                  
+                  if (newW < 20) { if (pos.includes('w')) newL = startL + startW - 20; newW = 20; } 
+                  if (newH < minH) { if (pos.includes('n')) newT = startT + startH - minH; newH = minH; } 
+                  if (newL < 0) { newW += newL; newL = 0; } if (newL + newW > 850) newW = 850 - newL; 
+                  if (newT < 0) { newH += newT; newT = 0; } 
+                  
+                  let testRect = { left: newL, top: newT, right: newL + newW, bottom: newT + newH }; let collision = false; 
+                  for (let other of otherBlocks) { 
+                      let oRect = { left: parseInt(other.style.left || 0), top: parseInt(other.style.top || 0), right: parseInt(other.style.left || 0) + other.offsetWidth, bottom: parseInt(other.style.top || 0) + other.offsetHeight }; 
+                      if (oRect.left < testRect.right && oRect.right > testRect.left && oRect.top < testRect.bottom && oRect.bottom > testRect.top) { collision = true; break; } 
+                  } 
+                  
+                  if (!collision) { 
+                      block.style.width = newW + 'px'; block.style.height = newH + 'px'; 
+                      block.style.left = newL + 'px'; block.style.top = newT + 'px'; 
+                      updatePropertiesUI(); updateMultiSelectionBoundingBox(); 
+                  } 
+              } 
+              function onMouseUp() {
+                  document.removeEventListener('mousemove', onMouseMove);
+                  document.removeEventListener('mouseup', onMouseUp);
+                  block.classList.remove('resizing');
+                  updateCanvasHeight();
+                  saveState();
+              }
+              document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp); 
+          }); 
+          block.appendChild(handle); 
+      }); 
+      
+      // ARRASTRE LIBRE CON UMBRAL DE 5PX (PERMITE CLIC Y DOBLE CLIC LIMPIOS) + APERTURA EN INTERSECCIÓN
+      block.addEventListener('mousedown', function(e) { 
+        if (isColEditMode) return;
+        const textEdit = block.querySelector('.block-text'); if (textEdit && textEdit.classList.contains('editing')) return; 
+        if (textEdit && !textEdit.classList.contains('editing')) { e.preventDefault(); } 
+        if (e.target !== deleteBtn && !e.target.classList.contains('resize-handle')) { 
+          e.stopPropagation(); 
+          if (e.shiftKey) {
+            if (selectedBlocks.has(block)) { removeFromSelection(block); return; }
+            else { addToSelection(block); }
+          } else {
+            if (!selectedBlocks.has(block)) { clearSelection(); addToSelection(block); }
+          } 
+          
+          let startX = e.clientX, startY = e.clientY;
+          let isDraggingActive = false;
+          let groupData = [];
+          let minGX = Infinity, minGY = Infinity, maxGX = 0, maxGY = 0; 
+
+          selectedBlocks.forEach(b => { 
+              let l = parseInt(b.style.left || 0), t = parseInt(b.style.top || 0);
+              let w = b.offsetWidth, h = b.offsetHeight; 
+              if(l < minGX) minGX = l; if(t < minGY) minGY = t;
+              if(l+w > maxGX) maxGX = l+w; if(t+h > maxGY) maxGY = t+h; 
+              groupData.push({ element: b, origLeft: l, origTop: t, width: w, height: h }); 
+          }); 
+          let groupW = maxGX - minGX, groupH = maxGY - minGY; 
+
+          let otherBlocksSnapshot = Array.from(document.querySelectorAll('.block'))
+            .filter(b => !selectedBlocks.has(b))
+            .map(b => ({
+              el: b,
+              origL: parseInt(b.style.left || 0),
+              origT: parseInt(b.style.top || 0),
+              w: b.offsetWidth,
+              h: b.offsetHeight
+            }));
+
+          let dwellTimer = null;
+          let pendingInsertY = null;
+          let openedSpaceAtY = null;
+
+          function resetOtherBlocksToSnapshot() {
+            otherBlocksSnapshot.forEach(ob => {
+              ob.el.style.top = ob.origT + 'px';
+            });
+            openedSpaceAtY = null;
+          }
+
+          function openSpaceAt(insertY) {
+            openedSpaceAtY = insertY;
+            if (insertionGuide) insertionGuide.style.display = 'none';
+
+            otherBlocksSnapshot.forEach(ob => {
+              if (ob.origT + ob.h > insertY + 4) {
+                ob.el.style.top = (ob.origT + groupH) + 'px';
+              } else {
+                ob.el.style.top = ob.origT + 'px';
+              }
+            });
+
+            let snapDeltaY = insertY - minGY;
+            groupData.forEach(item => {
+              item.element.style.top = (item.origTop + snapDeltaY) + 'px';
+            });
+
+            updatePropertiesUI();
+            updateMultiSelectionBoundingBox();
+            updateCanvasHeight();
+          }
+
+          function findTargetIntersectionY(curX, curY) {
+            let dragRect = { left: curX, top: curY, right: curX + groupW, bottom: curY + groupH };
+            let overlapping = otherBlocksSnapshot.filter(ob => {
+              let oRect = { left: ob.origL, top: ob.origT, right: ob.origL + ob.w, bottom: ob.origT + ob.h };
+              return checkOverlap(dragRect, oRect);
+            });
+
+            if (overlapping.length === 0) return null;
+
+            let bestY = null;
+            let bestDist = Infinity;
+            overlapping.forEach(ob => {
+              let distTop = Math.abs(curY - ob.origT);
+              let distBot = Math.abs(curY - (ob.origT + ob.h));
+              if (distTop <= distBot && distTop < bestDist) {
+                bestDist = distTop;
+                bestY = ob.origT;
+              } else if (distBot < distTop && distBot < bestDist) {
+                bestDist = distBot;
+                bestY = ob.origT + ob.h;
+              }
+            });
+            return bestY !== null ? bestY : overlapping[0].origT;
+          }
+
+          function onMouseMove(moveEvent) { 
+            let dx = moveEvent.clientX - startX;
+            let dy = moveEvent.clientY - startY; 
+
+            if (!isDraggingActive) {
+              if (Math.hypot(dx, dy) < 5) return;
+              isDraggingActive = true;
+              document.body.style.userSelect = 'none';
+              selectedBlocks.forEach(b => b.classList.add('dragging'));
+            }
+
+            let snapThreshold = moveEvent.altKey ? 0 : 10; 
+            let newX = minGX + dx;
+            let newY = minGY + dy; 
+            
+            if (snapThreshold > 0) { 
+                gridGuides.forEach(guide => { 
+                    if (Math.abs(newX - guide) < snapThreshold) newX = guide; 
+                    else if (Math.abs((newX + groupW) - guide) < snapThreshold) newX = guide - groupW; 
+                }); 
+            }
+            
+            if (snapThreshold > 0) {
+                otherBlocksSnapshot.forEach(ob => { 
+                    let currentObTop = parseInt(ob.el.style.top || 0);
+                    let currentObBot = currentObTop + ob.h;
+                    if (Math.abs(newY - currentObBot) < snapThreshold) newY = currentObBot;
+                    else if (Math.abs(newY - currentObTop) < snapThreshold) newY = currentObTop;
+                    else if (Math.abs((newY + groupH) - currentObTop) < snapThreshold) newY = currentObTop - groupH;
+                }); 
+            }
+
+            if (newX < 0) newX = 0;
+            if (newX + groupW > 850) newX = 850 - groupW;
+            if (newY < 0) newY = 0; 
+
+            let deltaX = newX - minGX;
+            let deltaY = newY - minGY;
+
+            groupData.forEach(item => {
+                item.element.style.left = (item.origLeft + deltaX) + 'px';
+                item.element.style.top = (item.origTop + deltaY) + 'px';
+            });
+            updatePropertiesUI();
+            updateMultiSelectionBoundingBox();
+
+            if (openedSpaceAtY !== null && Math.abs(newY - openedSpaceAtY) > 35) {
+                resetOtherBlocksToSnapshot();
+            }
+
+            let targetY = findTargetIntersectionY(newX, newY);
+            if (targetY !== null && openedSpaceAtY !== targetY) {
+                if (insertionGuide) {
+                    insertionGuide.style.top = targetY + 'px';
+                    insertionGuide.style.display = 'block';
+                }
+                if (pendingInsertY !== targetY) {
+                    pendingInsertY = targetY;
+                    if (dwellTimer) clearTimeout(dwellTimer);
+                    dwellTimer = setTimeout(() => {
+                        openSpaceAt(targetY);
+                    }, 900);
+                }
+            } else {
+                pendingInsertY = null;
+                if (dwellTimer) {
+                    clearTimeout(dwellTimer);
+                    dwellTimer = null;
+                }
+                if (insertionGuide) insertionGuide.style.display = 'none';
+            }
+          } 
+
+          function onMouseUp() { 
+            document.removeEventListener('mousemove', onMouseMove); 
+            document.removeEventListener('mouseup', onMouseUp); 
+            if (dwellTimer) clearTimeout(dwellTimer);
+            if (insertionGuide) insertionGuide.style.display = 'none';
+            document.body.style.userSelect = 'auto'; 
+            selectedBlocks.forEach(b => b.classList.remove('dragging')); 
+
+            if (isDraggingActive) {
+              try {
+                let finalMinX = Infinity, finalMinY = Infinity;
+                selectedBlocks.forEach(b => {
+                  let l = parseInt(b.style.left || 0), t = parseInt(b.style.top || 0);
+                  if (l < finalMinX) finalMinX = l;
+                  if (t < finalMinY) finalMinY = t;
+                });
+
+                if (openedSpaceAtY === null) {
+                  let targetY = findTargetIntersectionY(finalMinX, finalMinY);
+                  if (targetY !== null) {
+                    openSpaceAt(targetY);
+                  }
+                }
+              } catch (err) {
+                console.warn(err);
+              }
+              updateCanvasHeight(); 
+              saveState(); 
+            }
+          } 
+          document.addEventListener('mousemove', onMouseMove); 
+          document.addEventListener('mouseup', onMouseUp); 
+        } 
+      }); 
+      canvas.appendChild(block); 
+      if(!restoreData) { clearSelection(); addToSelection(block); updateCanvasHeight(); updateMultiSelectionBoundingBox(); saveState(); } 
+      return block; 
+    } 
+
+    // ==========================================
+    // MOTOR DE COMPOSICIÓN EN LIENZO MAESTRO (RESPONSIVE FLUID-HYBRID)
+    // ==========================================
+    function loadImageElement(src) {
+      return new Promise((resolve) => {
+        if (!src) return resolve(null);
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    async function drawBlockOnMasterCtx(ctx, b, scale) {
+      const targetX = b.x * scale;
+      const targetY = b.y * scale;
+      const targetW = b.w * scale;
+      const targetH = b.h * scale;
+
+      ctx.fillStyle = '#fcfcfc';
+      ctx.fillRect(targetX, targetY, targetW, targetH);
+
+      if (b.type === 'image' && b.src) {
+        const img = await loadImageElement(b.src);
+        if (img) {
+          const imgW = img.naturalWidth || img.width;
+          const imgH = img.naturalHeight || img.height;
+          const imgRatio = imgW / imgH;
+          const boxRatio = b.w / b.h;
+
+          let drawW, drawH, offX, offY;
+          if (imgRatio > boxRatio) {
+            drawH = targetH;
+            drawW = targetH * imgRatio;
+            offX = (targetW - drawW) / 2;
+            offY = 0;
+          } else {
+            drawW = targetW;
+            drawH = targetW / imgRatio;
+            offX = 0;
+            offY = (targetH - drawH) / 2;
+          }
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(targetX, targetY, targetW, targetH);
+          ctx.clip();
+          ctx.drawImage(img, targetX + offX, targetY + offY, drawW, drawH);
+          ctx.restore();
+        }
+      } else if (b.type === 'text') {
+        let justify = 'flex-start';
+        if (b.css && b.css.includes('justify-content: center')) justify = 'center';
+        else if (b.css && b.css.includes('justify-content: flex-end')) justify = 'flex-end';
+
+        const padTop = b.ptVal || 0;
+        const padSides = b.pxVal || 0;
+
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = b.html || '';
+        const xhtmlContent = new XMLSerializer().serializeToString(tempContainer);
+
+        const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${b.w}" height="${b.h}">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="width:${b.w}px; height:${b.h}px; background-color:#fcfcfc; display:flex; flex-direction:column; justify-content:${justify}; padding:${padTop}px ${padSides}px 10px ${padSides}px; box-sizing:border-box; font-family:Arial, Helvetica, sans-serif; font-size:${b.fsVal}px; line-height:${b.lhVal}px; color:${b.colorVal}; text-align:${b.textAlign}; word-break:break-word; overflow:hidden; margin:0;">
+              ${xhtmlContent}
+            </div>
+          </foreignObject>
+        </svg>`;
+
+        const svgImg = await loadImageElement('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr));
+        if (svgImg) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(targetX, targetY, targetW, targetH);
+          ctx.clip();
+          ctx.drawImage(svgImg, targetX, targetY, targetW, targetH);
+          ctx.restore();
+        }
+      }
+    }
+
+    function sliceMasterCanvas(masterCanvas, scale, x, y, w, h) {
+      const sliceCvs = document.createElement('canvas');
+      sliceCvs.width = Math.max(1, Math.round(w * scale));
+      sliceCvs.height = Math.max(1, Math.round(h * scale));
+      const sCtx = sliceCvs.getContext('2d');
+      sCtx.fillStyle = '#fcfcfc';
+      sCtx.fillRect(0, 0, sliceCvs.width, sliceCvs.height);
+      sCtx.drawImage(
+        masterCanvas,
+        Math.round(x * scale),
+        Math.round(y * scale),
+        Math.round(w * scale),
+        Math.round(h * scale),
+        0,
+        0,
+        sliceCvs.width,
+        sliceCvs.height
+      );
+      return sliceCvs.toDataURL('image/png');
+    }
+
+    async function generateNewsletterDocument(isEML = false) {
+      clearSelection();
+      let subjectStr = subjectInput.value.trim(); 
+      if (!subjectStr) subjectStr = "Mi Nuevo Newsletter";
+      
+      let blocks = Array.from(document.querySelectorAll('.block')).map(b => {
+        let tEl = b.querySelector('.block-text');
+        let htmlContent = tEl ? tEl.innerHTML : '';
+        if (htmlContent.includes('icon-text.png') || htmlContent.includes('ms-icon') || htmlContent === 'Doble clic acá para editar el texto.') {
+            htmlContent = ''; 
+        }
+
+        let fsVal = 14, lhVal = 20, ptVal = 10, pxVal = 15;
+        let ffVal = 'Arial, Helvetica, sans-serif';
+        let colorVal = '#000000';
+        let textAlign = 'left';
+
+        if (tEl) {
+            let compStyle = window.getComputedStyle(tEl);
+            fsVal = parseInt(tEl.style.fontSize || compStyle.fontSize) || 14; 
+            lhVal = parseInt(tEl.style.lineHeight || compStyle.lineHeight) || Math.round(fsVal * 1.2) || 20;
+            ptVal = parseInt(tEl.style.paddingTop || compStyle.paddingTop) || 0; 
+            pxVal = parseInt(tEl.style.paddingLeft || compStyle.paddingLeft) || 0;
+            colorVal = rgbToHex(tEl.style.color || compStyle.color || '#000000'); 
+            textAlign = tEl.style.textAlign || compStyle.textAlign || 'left';
+            let safeFontFamily = ffVal.replace(/"/g, "'");
+
+            htmlContent = htmlContent.replace(/style="([^"]*)"/g, function(match, styleRules) {
+                let cleanedRules = styleRules
+                    .replace(/font-family\s*:[^;]+;?/gi, '')
+                    .replace(/font-size\s*:[^;]+;?/gi, '')
+                    .replace(/line-height\s*:[^;]+;?/gi, '')
+                    .replace(/margin[^:]*:[^;]+;?/gi, '')
+                    .replace(/padding[^:]*:[^;]+;?/gi, '');
+                return cleanedRules.trim() === '' ? '' : `style="${cleanedRules}"`;
+            });
+            htmlContent = htmlContent.replace(/<font[^>]*>/gi, '').replace(/<\/font>/gi, '');
+            htmlContent = htmlContent.replace(/class="[^"]*"/gi, '');
+            htmlContent = htmlContent.replace(/<br\s*\/?>\s*$/i, '');
+
+            let tempDiv = document.createElement('div'); 
+            tempDiv.innerHTML = htmlContent;
+            let fonts = tempDiv.querySelectorAll('font');
+            fonts.forEach(f => { 
+                let span = document.createElement('span'); 
+                span.innerHTML = f.innerHTML; 
+                if(f.color) span.style.color = rgbToHex(f.color); 
+                if(f.face) span.style.fontFamily = f.face; 
+                span.style.cssText += f.style.cssText; 
+                f.replaceWith(span); 
+            });
+
+            tempDiv.querySelectorAll('*').forEach(el => {
+                el.removeAttribute('class');
+                if (!el.style.fontFamily) el.style.fontFamily = safeFontFamily;
+                el.style.fontSize = fsVal + 'px';
+                el.style.lineHeight = lhVal + 'px';
+                if (!el.style.color) el.style.color = colorVal;
+            });
+            htmlContent = tempDiv.innerHTML.replace(/<br\s*\/?>\s*$/i, '');
+        }
+
+        return { 
+            type: b.dataset.type, 
+            x: parseInt(b.style.left || 0), 
+            y: parseInt(b.style.top || 0), 
+            w: b.offsetWidth, 
+            h: b.offsetHeight, 
+            src: b.dataset.src || '', 
+            href: (b.dataset.href || '').trim(), 
+            html: htmlContent, 
+            css: tEl ? tEl.style.cssText : '', 
+            fsVal, lhVal, ptVal, pxVal, ffVal, colorVal, textAlign
+        };
+      });
+
+      if (blocks.length === 0) { 
+          showSalsaToast("Lienzo vacío", "Agregá al menos un bloque antes de exportar tu correo.", "error"); 
+          return null; 
+      }
+
+      const scale = 2;
+      const totalHeight = Math.max(100, ...blocks.map(b => b.y + b.h));
+      const masterCanvas = document.createElement('canvas');
+      masterCanvas.width = 850 * scale;
+      masterCanvas.height = totalHeight * scale;
+      const masterCtx = masterCanvas.getContext('2d');
+      masterCtx.fillStyle = '#fcfcfc';
+      masterCtx.fillRect(0, 0, masterCanvas.width, masterCanvas.height);
+
+      for (const b of blocks) {
+        if (b.type !== 'gif') {
+          await drawBlockOnMasterCtx(masterCtx, b, scale);
+        }
+      }
+
+      blocks.sort((a, b) => a.y - b.y || a.x - b.x);
+      let rawRows = [];
+      blocks.forEach(b => {
+        let placed = false;
+        for (let i = 0; i < rawRows.length; i++) {
+          let r = rawRows[i];
+          if (b.y < r.bottom && b.y + b.h > r.top) {
+            r.blocks.push(b);
+            r.top = Math.min(r.top, b.y);
+            r.bottom = Math.max(r.bottom, b.y + b.h);
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) rawRows.push({ top: b.y, bottom: b.y + b.h, blocks: [b] });
+      });
+      rawRows.sort((a, b) => a.top - b.top);
+
+      let bands = [];
+      let curY = 0;
+
+      for (const r of rawRows) {
+        const hasGif = r.blocks.some(b => b.type === 'gif' && b.src);
+        const hasLinks = r.blocks.some(b => b.href !== '');
+        const isSpecialRow = hasGif || hasLinks;
+
+        if (!isSpecialRow) {
+          if (bands.length > 0 && !bands[bands.length - 1].isSpecial) {
+            bands[bands.length - 1].bottom = r.bottom;
+          } else {
+            bands.push({ isSpecial: false, top: curY, bottom: r.bottom, blocks: [] });
+          }
+        } else {
+          if (r.top > curY) {
+            if (bands.length > 0 && !bands[bands.length - 1].isSpecial) {
+              bands[bands.length - 1].bottom = r.top;
+            } else {
+              bands.push({ isSpecial: false, top: curY, bottom: r.top, blocks: [] });
+            }
+          }
+          bands.push({ isSpecial: true, top: r.top, bottom: r.bottom, blocks: r.blocks });
+        }
+        curY = r.bottom;
+      }
+
+      let attachments = [];
+      function registerInlineImage(base64Url) {
+        if (!isEML) return base64Url;
+        let cid = 'img_' + attachments.length + '@newsletter';
+        let base64Data = base64Url.split(',')[1];
+        attachments.push({ cid, mimeType: 'image/png', ext: 'png', base64Data });
+        return `cid:${cid}`;
+      }
+
+      let htmlTable = `<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#fcfcfc" style="width:100%; max-width:850px; background-color:#fcfcfc; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; margin:0 auto;">`;
+
+      for (const band of bands) {
+        const bandH = Math.max(1, band.bottom - band.top);
+
+        if (!band.isSpecial) {
+          const sliceB64 = sliceMasterCanvas(masterCanvas, scale, 0, band.top, 850, bandH);
+          const imgSrc = registerInlineImage(sliceB64);
+          const imgStyle = `display:block; width:100%; max-width:850px; height:auto; border:0; outline:none; text-decoration:none; margin:0; padding:0;`;
+
+          htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#fcfcfc" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;"><p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${imgSrc}" width="100%" style="${imgStyle}" alt="" /></p></td></tr>`;
+        } else {
+          band.blocks.sort((a, b) => a.x - b.x);
+          let segments = [];
+          let xCursor = 0;
+
+          for (const b of band.blocks) {
+            let startX = Math.max(xCursor, b.x);
+            let gapW = startX - xCursor;
+            if (gapW > 0) {
+              segments.push({ type: 'slice', x: xCursor, w: gapW, href: '' });
+              xCursor = startX;
+            }
+            let safeW = Math.min(850 - xCursor, b.w - (startX - b.x));
+            if (safeW > 0) {
+              if (b.type === 'gif' && b.src) {
+                // Modificado: Ahora le pasamos la altura real (b.h) del bloque GIF original al segmento
+                segments.push({ type: 'gif', x: xCursor, w: safeW, h: b.h, src: b.src, href: b.href });
+              } else {
+                segments.push({ type: 'slice', x: xCursor, w: safeW, href: b.href });
+              }
+              xCursor += safeW;
+            }
+          }
+          if (xCursor < 850) {
+            segments.push({ type: 'slice', x: xCursor, w: 850 - xCursor, href: '' });
+          }
+
+          htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#fcfcfc" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px;"><table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#fcfcfc" style="width:100%; max-width:850px; table-layout:fixed; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; background-color:#fcfcfc;"><tr style="font-size:0px; line-height:0px;">`;
+
+          for (const seg of segments) {
+            let pctW = ((seg.w / 850) * 100).toFixed(4) + '%';
+            
+            htmlTable += `<td width="${pctW}" valign="middle" align="center" bgcolor="#fcfcfc" style="width:${pctW}; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;">`;
+
+            let innerTag = '';
+            if (seg.type === 'gif') {
+              // Altura objetivo real del GIF y cálculos para el aspect ratio de la caja de recorte
+              const targetH = seg.h; 
+              
+              // Estilo para el contenedor que hace de máscara
+              const wrapperStyle = `display:block; overflow:hidden; width:100%; max-width:${seg.w}px; max-height:${targetH}px; text-align:center; margin:0 auto;`;
+              
+              // Ajustes CSS combinados para tratar de simular "object-fit: cover" en la mayoría de los clientes de correo.
+              // Usamos min-width y object-fit moderno para los que lo soportan.
+              const gStyle = `display:block; width:100%; min-width:100%; height:auto; min-height:${targetH}px; max-width:none; object-fit:cover; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
+              
+              // Envolvemos la imagen en un div con altura máxima
+              innerTag = `<div style="${wrapperStyle}"><!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:${seg.w}px;height:${targetH}px;"><v:fill type="frame" src="${seg.src}" /></v:rect><![endif]--><![if !mso]><img src="${seg.src}" width="100%" style="${gStyle}" alt="" /><![endif]></div>`;
+
+            } else {
+              const segB64 = sliceMasterCanvas(masterCanvas, scale, seg.x, band.top, seg.w, bandH);
+              const segSrc = registerInlineImage(segB64);
+              let sStyle = `display:block; width:100%; max-width:${seg.w}px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
+              innerTag = `<img src="${segSrc}" width="100%" style="${sStyle}" alt="" />`;
+            }
+
+            if (seg.href) {
+              htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><a href="${seg.href}" target="_blank" style="text-decoration:none; display:block; margin:0; padding:0; border:0; outline:none;">${innerTag}</a></p>`;
+            } else {
+              htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;">${innerTag}</p>`;
+            }
+
+            htmlTable += `</td>`;
+          }
+
+          htmlTable += `</tr></table></td></tr>`;
+        }
+      }
+
+      htmlTable += `</table>`;
+
+      const fullHtml = `<!DOCTYPE html>
+<html lang="es" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+  <title>${subjectStr}</title>
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td, div, p, span, a { font-family: Arial, Helvetica, sans-serif !important; }
+    table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    p.MsoNormal, li.MsoNormal, div.MsoNormal { margin: 0cm !important; margin-bottom: 0pt !important; line-height: 0px !important; font-size: 0px !important; }
+  </style>
+  <xml>
+    <o:OfficeDocumentSettings>
+      <o:AllowPNG/>
+      <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings>
+  </xml>
+  <![endif]-->
+  <style>
+    :root { color-scheme: light only; supported-color-schemes: light only; }
+    body, table, td, p, a, div, span { -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
+    table, tr, td, p, div, span { margin: 0 !important; padding: 0 !important; }
+    p.MsoNormal, li.MsoNormal, div.MsoNormal { margin: 0cm !important; margin-bottom: 0pt !important; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse !important; border-spacing: 0 !important; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; display: block; line-height: 100%; height: auto; }
+    body { background-color: #fcfcfc !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+  </style>
+</head>
+<body bgcolor="#fcfcfc" style="margin:0; padding:0; background-color:#fcfcfc; font-family: Arial, Helvetica, sans-serif; width: 100%;">
+  <center style="width:100%; background-color:#fcfcfc;">
+    <!-- El cliente Outlook de escritorio sigue leyendo esta tabla externa rígida a 850px -->
+    <!--[if mso]>
+    <table width="850" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#fcfcfc"><tr><td width="850" align="center" valign="top" bgcolor="#fcfcfc">
+    <![endif]-->
+    ${htmlTable}
+    <!--[if mso]>
+    </td></tr></table>
+    <![endif]-->
+  </center>
+</body>
+</html>`;
+
+      return { fullHtml, subjectStr, attachments };
+    }
+
+    async function exportHTML() {
+      closeDropdowns();
+      try {
+        const doc = await generateNewsletterDocument(false); 
+        if (!doc) return;
+        
+        const safeFileName = (doc.subjectStr.replace(/[\\/:*?"<>|]/g, '_').trim() || 'Newsletter') + '.html';
+        
+        if (ipcRenderer) { 
+            const result = await ipcRenderer.invoke('show-save-dialog', { 
+                title: 'Exportar HTML', 
+                defaultPath: safeFileName, 
+                filters: [{ name: 'Documento HTML', extensions: ['html'] }] 
+            }); 
+            
+            if (!result.canceled && result.filePath) {
+                const guardado = await ipcRenderer.invoke('save-file', result.filePath, doc.fullHtml);
+                if (guardado) {
+                    showSalsaToast("¡HTML Exportado!", `Tu archivo "${safeFileName}" está listo para usar.`, "success");
+                } else {
+                    showSalsaToast("Error al guardar", "No se pudo escribir el archivo. Revisá los permisos de la carpeta.", "error");
+                }
+            } 
+        } else { 
+            const blob = new Blob([doc.fullHtml], { type: 'text/html;charset=utf-8' }); 
+            const url = URL.createObjectURL(blob); 
+            const a = document.createElement('a'); 
+            a.href = url; 
+            a.download = safeFileName; 
+            a.click(); 
+            URL.revokeObjectURL(url); 
+            showSalsaToast("¡HTML Descargado!", `Tu archivo "${safeFileName}" se descargó con éxito.`, "success");
+        }
+      } catch (err) {
+        console.error("Error al exportar HTML:", err);
+        showSalsaToast("Error inesperado", "Ocurrió un problema al armar el HTML.", "error");
+      }
+    }
+
+    async function exportEML() {
+      closeDropdowns();
+      try {
+        const doc = await generateNewsletterDocument(true); 
+        if (!doc) return;
+        
+        const boundary = "----=_NextPart_" + Math.random().toString(16).slice(2);
+        
+        let eml = `To: destinatario@ejemplo.com\nSubject: ${doc.subjectStr}\nX-Unsent: 1\nMIME-Version: 1.0\nContent-Type: multipart/related; boundary="${boundary}"\n\n--${boundary}\nContent-Type: text/html; charset=utf-8\nContent-Transfer-Encoding: 8bit\n\n${doc.fullHtml}\n\n`;
+        
+        doc.attachments.forEach(att => { 
+            eml += `--${boundary}\nContent-Type: ${att.mimeType}; name="${att.cid}.${att.ext}"\nContent-Transfer-Encoding: base64\nContent-ID: <${att.cid}>\nContent-Disposition: inline; filename="${att.cid}.${att.ext}"\n\n${att.base64Data}\n\n`; 
+        });
+        eml += `--${boundary}--\n`;
+        
+        const safeFileName = (doc.subjectStr.replace(/[\\/:*?"<>|]/g, '_').trim() || 'Newsletter') + '.eml';
+        
+        if (ipcRenderer) { 
+            const result = await ipcRenderer.invoke('show-save-dialog', { 
+                title: 'Exportar Email (EML)', 
+                defaultPath: safeFileName, 
+                filters: [{ name: 'Mensaje de Correo', extensions: ['eml'] }] 
+            }); 
+            
+            if (!result.canceled && result.filePath) {
+                const guardado = await ipcRenderer.invoke('save-file', result.filePath, eml);
+                if (guardado) {
+                    showSalsaToast("¡Email (.eml) Exportado!", `Listo para abrir y enviar desde tu cliente de correo.`, "success");
+                } else {
+                    showSalsaToast("Error al guardar", "No se pudo escribir el archivo .eml en la carpeta.", "error");
+                }
+            } 
+        } else { 
+            const blob = new Blob([eml], { type: 'message/rfc822' }); 
+            const url = URL.createObjectURL(blob); 
+            const a = document.createElement('a'); 
+            a.href = url; 
+            a.download = safeFileName; 
+            a.click(); 
+            URL.revokeObjectURL(url); 
+            showSalsaToast("¡Email (.eml) Descargado!", `Tu archivo "${safeFileName}" se descargó con éxito.`, "success");
+        }
+      } catch (err) {
+        console.error("Error al exportar EML:", err);
+        showSalsaToast("Error inesperado", "Ocurrió un problema al armar el archivo EML.", "error");
+      }
+    }
+  </script>
+</body>
+</html>
