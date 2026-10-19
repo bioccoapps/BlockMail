@@ -1,6 +1,6 @@
 {
   "name": "blockmail",
-  "version": "2.0.0",
+  "version": "2.0.3",
   "main": "index.js",
   "scripts": {
     "start": "electron .",
@@ -30,11 +30,11 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     },
-    "publish": [
+   "publish": [
       {
         "provider": "github",
-        "owner": "TU_USUARIO",
-        "repo": "TU_REPO"
+        "owner": "bioccoapps",
+        "repo": "BlockMail"
       }
     ]
   }
