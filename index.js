@@ -2,19 +2,20 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
-const { autoUpdater } = require('electron-updater');
+const { autoUpdater } = require('electron-updater'); // <-- EL MOTOR DE ACTUALIZACIONES
 
 let mainWindow;
 let isForceClose = false;
 
-// Registra automáticamente el nuevo doc-logo.ico en Windows para los archivos .bmail
+// Configuración de actualizaciones invisibles
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
+
 function registrarIconoBmailEnWindows() {
   if (process.platform !== 'win32') return;
-
   const docIconPath = path.join(__dirname, 'doc-logo.ico');
   if (!fs.existsSync(docIconPath)) return;
 
-  // Actualiza tanto la clase general de .bmail como cualquier ProgID previo que haya quedado de la versión 1.0
   const cmds = [
     `reg query "HKCU\\Software\\Classes\\.bmail" /ve`,
     `reg add "HKCU\\Software\\Classes\\.bmail" /ve /d "BlockMail.Document" /f`,
@@ -24,7 +25,6 @@ function registrarIconoBmailEnWindows() {
     `ie4uinit.exe -show`
   ];
 
-  // Si había un identificador antiguo guardado en el registro, también le pisa el DefaultIcon
   exec('reg query "HKCU\\Software\\Classes\\.bmail" /ve', (err, stdout) => {
     if (!err && stdout) {
       const match = stdout.match(/REG_SZ\s+(.+)/);
@@ -41,7 +41,7 @@ function createWindow () {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    icon: path.join(__dirname, 'app-logo.ico'), // Ícono de la ventana y barra de tareas
+    icon: path.join(__dirname, 'app-logo.ico'),
     autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: true,
@@ -52,7 +52,13 @@ function createWindow () {
   mainWindow.setMenuBarVisibility(false);
   mainWindow.loadFile('index.html');
 
-  // Intercepta el cierre de la ventana para avisar si hay cambios sin guardar
+  // 🔥 SOLUCIÓN A LA CARRERA: Espera a que la interfaz cargue para buscar la actualización
+  mainWindow.webContents.once('did-finish-load', () => {
+    if (app.isPackaged) {
+      autoUpdater.checkForUpdates();
+    }
+  });
+
   mainWindow.on('close', (e) => {
     if (!isForceClose) {
       e.preventDefault();
@@ -70,32 +76,40 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+// ==========================================
+// COMUNICACIÓN IPC DEL AUTO-UPDATER
+// ==========================================
+autoUpdater.on('update-available', (info) => {
+  mainWindow.webContents.send('update-available', info);
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  mainWindow.webContents.send('update-downloaded', info);
+});
+
+// 🔥 NUEVO: Atrapamos errores silenciosos
+autoUpdater.on('error', (err) => {
+  mainWindow.webContents.send('update-error', err.message);
+});
+
+ipcMain.on('restart-app', () => {
+  autoUpdater.quitAndInstall();
+});
 
 // ==========================================
 // COMUNICACIÓN CON EL SISTEMA OPERATIVO (IPC)
 // ==========================================
-
 ipcMain.handle('get-app-version', () => app.getVersion());
-
 ipcMain.handle('get-user-data-path', () => app.getPath('userData'));
-
 ipcMain.handle('show-save-dialog', async (event, options) => {
   return await dialog.showSaveDialog(mainWindow, options);
 });
-
 ipcMain.handle('show-open-dialog', async (event, options) => {
   return await dialog.showOpenDialog(mainWindow, options);
 });
-
 ipcMain.handle('save-file', (event, filePath, content) => {
-  try { 
-    fs.writeFileSync(filePath, content, 'utf-8'); 
-    return true; 
-  } catch(e) { 
-    return false; 
-  }
+  try { fs.writeFileSync(filePath, content, 'utf-8'); return true; } catch(e) { return false; }
 });
-
 ipcMain.on('force-close-app', () => {
   isForceClose = true;
   app.quit();

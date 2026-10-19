@@ -1101,6 +1101,17 @@
             document.getElementById('update-details').innerText = "Nueva versión: " + info.version;
          }
       });
+ipcRenderer.on('update-error', (event, err) => {
+         console.error("Error del actualizador:", err);
+         const modal = document.getElementById('update-modal');
+         if (modal && modal.style.display === 'flex') {
+             document.getElementById('update-title').innerText = "Error en la actualización";
+             document.getElementById('update-text').innerText = "Falló la descarga. Revisá tu internet o contactá al soporte técnico.";
+             document.getElementById('update-spinner').style.display = 'none';
+             document.getElementById('update-later-btn').style.display = 'flex';
+             document.getElementById('update-later-btn').innerText = "Entendido";
+         }
+      });
     }
 
     function restartApp() {
