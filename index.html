@@ -3125,7 +3125,6 @@
             let safeW = Math.min(850 - xCursor, b.w - (startX - b.x));
             if (safeW > 0) {
               if (b.type === 'gif' && b.src) {
-                // Modificado: Ahora le pasamos la altura real (b.h) del bloque GIF original al segmento
                 segments.push({ type: 'gif', x: xCursor, w: safeW, h: b.h, src: b.src, href: b.href });
               } else {
                 segments.push({ type: 'slice', x: xCursor, w: safeW, href: b.href });
@@ -3146,19 +3145,17 @@
 
             let innerTag = '';
             if (seg.type === 'gif') {
-              // Altura objetivo real del GIF y cálculos para el aspect ratio de la caja de recorte
-              const targetH = seg.h; 
+              // CÁLCULO PROPORCIONAL: Así forzamos a Gmail a respetar el alto sin importar si se achica
+              const targetH = seg.h;
+              const ratioPct = ((targetH / seg.w) * 100).toFixed(4);
               
-              // Estilo para el contenedor que hace de máscara
-              const wrapperStyle = `display:block; overflow:hidden; width:100%; max-width:${seg.w}px; max-height:${targetH}px; text-align:center; margin:0 auto;`;
+              // VML para Outlook (escritorio)
+              const vmlCode = `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:${seg.w}px;height:${targetH}px;"><v:fill type="frame" src="${seg.src}" /></v:rect><![endif]-->`;
               
-              // Ajustes CSS combinados para tratar de simular "object-fit: cover" en la mayoría de los clientes de correo.
-              // Usamos min-width y object-fit moderno para los que lo soportan.
-              const gStyle = `display:block; width:100%; min-width:100%; height:auto; min-height:${targetH}px; max-width:none; object-fit:cover; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
-              
-              // Envolvemos la imagen en un div con altura máxima
-              innerTag = `<div style="${wrapperStyle}"><!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:${seg.w}px;height:${targetH}px;"><v:fill type="frame" src="${seg.src}" /></v:rect><![endif]--><![if !mso]><img src="${seg.src}" width="100%" style="${gStyle}" alt="" /><![endif]></div>`;
+              // CSS Background Fluido para Web/Mobile (Gmail no lo borra y recorta perfecto)
+              const fluidDiv = `<!--[if !mso]><!--><div style="display:block; width:100%; height:0; padding-bottom:${ratioPct}%; background-image:url('${seg.src}'); background-size:cover; background-position:center; background-repeat:no-repeat; margin:0 auto; overflow:hidden;"></div><!--<![endif]-->`;
 
+              innerTag = vmlCode + fluidDiv;
             } else {
               const segB64 = sliceMasterCanvas(masterCanvas, scale, seg.x, band.top, seg.w, bandH);
               const segSrc = registerInlineImage(segB64);
