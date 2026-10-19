@@ -1101,7 +1101,8 @@
             document.getElementById('update-details').innerText = "Nueva versión: " + info.version;
          }
       });
-ipcRenderer.on('update-error', (event, err) => {
+
+      ipcRenderer.on('update-error', (event, err) => {
          console.error("Error del actualizador:", err);
          const modal = document.getElementById('update-modal');
          if (modal && modal.style.display === 'flex') {
@@ -2857,7 +2858,7 @@ ipcRenderer.on('update-error', (event, err) => {
     } 
 
     // ==========================================
-    // MOTOR DE COMPOSICIÓN EN LIENZO MAESTRO (RESPONSIVE FLUID-HYBRID)
+    // MOTOR DE COMPOSICIÓN EN LIENZO MAESTRO (RESPONSIVE FLUID-HYBRID + GIF REAL)
     // ==========================================
     function loadImageElement(src) {
       return new Promise((resolve) => {
@@ -2868,6 +2869,16 @@ ipcRenderer.on('update-error', (event, err) => {
         img.onerror = () => resolve(null);
         img.src = src;
       });
+    }
+
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      return window.btoa(binary);
     }
 
     async function drawBlockOnMasterCtx(ctx, b, scale) {
@@ -3050,8 +3061,32 @@ ipcRenderer.on('update-error', (event, err) => {
       masterCtx.fillStyle = '#fcfcfc';
       masterCtx.fillRect(0, 0, masterCanvas.width, masterCanvas.height);
 
+      // MEDICIÓN PROPORCIONAL REAL (CONTAIN) PARA QUE LOS GIFS NO SE ESTIREN Y RESPETEN SU TAMAÑO
       for (const b of blocks) {
-        if (b.type !== 'gif') {
+        if (b.type === 'gif' && b.src) {
+          const gImg = await loadImageElement(b.src);
+          if (gImg && (gImg.naturalWidth || gImg.width) > 0 && (gImg.naturalHeight || gImg.height) > 0) {
+            const iW = gImg.naturalWidth || gImg.width;
+            const iH = gImg.naturalHeight || gImg.height;
+            const iRatio = iW / iH;
+            const bRatio = b.w / b.h;
+            let drawW, drawH, offX;
+            if (iRatio > bRatio) {
+              drawW = Math.max(1, Math.round(b.w));
+              drawH = Math.max(1, Math.round(b.w / iRatio));
+              offX = 0;
+            } else {
+              drawH = Math.max(1, Math.round(b.h));
+              drawW = Math.max(1, Math.round(b.h * iRatio));
+              offX = Math.round((b.w - drawW) / 2);
+            }
+            b.x = b.x + offX;
+            b.w = drawW;
+            b.gifDrawH = drawH;
+          } else {
+            b.gifDrawH = b.h;
+          }
+        } else {
           await drawBlockOnMasterCtx(masterCtx, b, scale);
         }
       }
@@ -3110,6 +3145,28 @@ ipcRenderer.on('update-error', (event, err) => {
         return `cid:${cid}`;
       }
 
+      async function registerGifSource(gifUrl) {
+        if (!isEML || !gifUrl) return gifUrl;
+        try {
+          if (gifUrl.startsWith('data:image/')) {
+            let cid = 'gif_' + attachments.length + '@newsletter';
+            let base64Data = gifUrl.split(',')[1];
+            attachments.push({ cid, mimeType: 'image/gif', ext: 'gif', base64Data });
+            return `cid:${cid}`;
+          }
+          const resp = await fetch(gifUrl);
+          if (!resp.ok) return gifUrl;
+          const buf = await resp.arrayBuffer();
+          const base64Data = arrayBufferToBase64(buf);
+          let cid = 'gif_' + attachments.length + '@newsletter';
+          attachments.push({ cid, mimeType: 'image/gif', ext: 'gif', base64Data });
+          return `cid:${cid}`;
+        } catch (e) {
+          console.warn("Usando URL directa para GIF:", e);
+          return gifUrl;
+        }
+      }
+
       let htmlTable = `<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#fcfcfc" style="width:100%; max-width:850px; background-color:#fcfcfc; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; margin:0 auto;">`;
 
       for (const band of bands) {
@@ -3120,7 +3177,7 @@ ipcRenderer.on('update-error', (event, err) => {
           const imgSrc = registerInlineImage(sliceB64);
           const imgStyle = `display:block; width:100%; max-width:850px; height:auto; border:0; outline:none; text-decoration:none; margin:0; padding:0;`;
 
-          htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#fcfcfc" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;"><p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${imgSrc}" width="100%" style="${imgStyle}" alt="" /></p></td></tr>`;
+          htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#fcfcfc" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;"><p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${imgSrc}" width="850" style="${imgStyle}" alt="" /></p></td></tr>`;
         } else {
           band.blocks.sort((a, b) => a.x - b.x);
           let segments = [];
@@ -3136,7 +3193,14 @@ ipcRenderer.on('update-error', (event, err) => {
             let safeW = Math.min(850 - xCursor, b.w - (startX - b.x));
             if (safeW > 0) {
               if (b.type === 'gif' && b.src) {
-                segments.push({ type: 'gif', x: xCursor, w: safeW, h: b.h, src: b.src, href: b.href });
+                segments.push({
+                  type: 'gif',
+                  x: xCursor,
+                  w: safeW,
+                  h: b.gifDrawH || b.h,
+                  src: b.src,
+                  href: b.href
+                });
               } else {
                 segments.push({ type: 'slice', x: xCursor, w: safeW, href: b.href });
               }
@@ -3151,32 +3215,23 @@ ipcRenderer.on('update-error', (event, err) => {
 
           for (const seg of segments) {
             let pctW = ((seg.w / 850) * 100).toFixed(4) + '%';
+            let pxW = Math.max(1, Math.round(seg.w));
             
             htmlTable += `<td width="${pctW}" valign="middle" align="center" bgcolor="#fcfcfc" style="width:${pctW}; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;">`;
 
             let innerTag = '';
             if (seg.type === 'gif') {
-              const targetH = seg.h; 
-              
-              // Contenedor Inteligente que usa aspect-ratio para achicarse sin dejar espacios vacíos
-              const wrapperStyle = `display:block; width:100%; max-width:${seg.w}px; max-height:${targetH}px; aspect-ratio:${seg.w}/${targetH}; overflow:hidden; margin:0 auto;`;
-              
-              // Imagen clásica (asegura reproducción del GIF) configurada para recortar sus bordes
-              const imgStyle = `display:block; width:100%; min-height:100%; object-fit:cover; object-position:center; border:0; outline:none; text-decoration:none; margin:0; padding:0;`;
+              const targetH = Math.max(1, Math.round(seg.h));
+              const finalGifSrc = await registerGifSource(seg.src);
+              const gifStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; max-height:${targetH}px; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
 
-              // Renderizado seguro en Windows/Outlook usando VML
-              const vmlCode = `<!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:${seg.w}px;height:${targetH}px;"><v:fill type="frame" src="${seg.src}" /></v:rect><![endif]-->`;
-
-              // Renderizado para móviles, web y Apple usando el wrapper inteligente
-              const htmlCode = `<!--[if !mso]><!--><img src="${seg.src}" width="100%" style="${imgStyle}" alt="" /><!--<![endif]-->`;
-
-              innerTag = `<div style="${wrapperStyle}">${vmlCode}${htmlCode}</div>`;
-
+              // Etiqueta <img> estándar para todos los clientes (permite animación real del GIF y respeta su ancho pxW sin estirarse)
+              innerTag = `<img src="${finalGifSrc}" width="${pxW}" height="${targetH}" style="${gifStyle}" alt="" />`;
             } else {
               const segB64 = sliceMasterCanvas(masterCanvas, scale, seg.x, band.top, seg.w, bandH);
               const segSrc = registerInlineImage(segB64);
-              let sStyle = `display:block; width:100%; max-width:${seg.w}px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
-              innerTag = `<img src="${segSrc}" width="100%" style="${sStyle}" alt="" />`;
+              let sStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
+              innerTag = `<img src="${segSrc}" width="${pxW}" style="${sStyle}" alt="" />`;
             }
 
             if (seg.href) {
@@ -3229,7 +3284,6 @@ ipcRenderer.on('update-error', (event, err) => {
 </head>
 <body bgcolor="#fcfcfc" style="margin:0; padding:0; background-color:#fcfcfc; font-family: Arial, Helvetica, sans-serif; width: 100%;">
   <center style="width:100%; background-color:#fcfcfc;">
-    <!-- El cliente Outlook de escritorio sigue leyendo esta tabla externa rígida a 850px -->
     <!--[if mso]>
     <table width="850" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#fcfcfc"><tr><td width="850" align="center" valign="top" bgcolor="#fcfcfc">
     <![endif]-->
@@ -3291,12 +3345,13 @@ ipcRenderer.on('update-error', (event, err) => {
         
         const boundary = "----=_NextPart_" + Math.random().toString(16).slice(2);
         
-        let eml = `To: destinatario@ejemplo.com\nSubject: ${doc.subjectStr}\nX-Unsent: 1\nMIME-Version: 1.0\nContent-Type: multipart/related; boundary="${boundary}"\n\n--${boundary}\nContent-Type: text/html; charset=utf-8\nContent-Transfer-Encoding: 8bit\n\n${doc.fullHtml}\n\n`;
+        let eml = `To: destinatario@ejemplo.com\r\nSubject: ${doc.subjectStr}\r\nX-Unsent: 1\r\nMIME-Version: 1.0\r\nContent-Type: multipart/related; boundary="${boundary}"\r\n\r\n--${boundary}\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n${doc.fullHtml}\r\n\r\n`;
         
         doc.attachments.forEach(att => { 
-            eml += `--${boundary}\nContent-Type: ${att.mimeType}; name="${att.cid}.${att.ext}"\nContent-Transfer-Encoding: base64\nContent-ID: <${att.cid}>\nContent-Disposition: inline; filename="${att.cid}.${att.ext}"\n\n${att.base64Data}\n\n`; 
+            const wrappedBase64 = (att.base64Data || '').replace(/([^\r\n]{76})/g, '$1\r\n');
+            eml += `--${boundary}\r\nContent-Type: ${att.mimeType}; name="${att.cid}.${att.ext}"\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <${att.cid}>\r\nContent-Disposition: inline; filename="${att.cid}.${att.ext}"\r\n\r\n${wrappedBase64}\r\n\r\n`; 
         });
-        eml += `--${boundary}--\n`;
+        eml += `--${boundary}--\r\n`;
         
         const safeFileName = (doc.subjectStr.replace(/[\\/:*?"<>|]/g, '_').trim() || 'Newsletter') + '.eml';
         
