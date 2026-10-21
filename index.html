@@ -2975,7 +2975,7 @@
       return sliceCvs.toDataURL('image/png');
     }
 
-    async function generateNewsletterDocument(isEML = false) {
+ async function generateNewsletterDocument(isEML = false) {
       clearSelection();
       let subjectStr = subjectInput.value.trim(); 
       if (!subjectStr) subjectStr = "Mi Nuevo Newsletter";
@@ -3062,8 +3062,7 @@
       masterCanvas.width = 850 * scale;
       masterCanvas.height = totalHeight * scale;
       const masterCtx = masterCanvas.getContext('2d');
-      masterCtx.fillStyle = '#fcfcfc';
-      masterCtx.fillRect(0, 0, masterCanvas.width, masterCanvas.height);
+      // No llenamos con color, dejamos el canvas transparente para evitar cruces con el gris
 
       for (const b of blocks) {
         if (b.type === 'gif' && b.src) {
@@ -3090,13 +3089,14 @@
             b.gifDrawH = b.h;
           }
         } else if (b.type === 'text') {
-          // EXCLUSIÓN CLAVE: No dibujamos el texto en el canvas maestro, lo inyectaremos como HTML
+          // No dibujamos el texto en el canvas maestro, se inyectará como HTML puro
           continue;
-        } else {
+        } else if (b.type === 'image') {
           await drawBlockOnMasterCtx(masterCtx, b, scale);
         }
       }
 
+      // Agrupamos en bandas estrictas
       blocks.sort((a, b) => a.y - b.y || a.x - b.x);
       let rawRows = [];
       blocks.forEach(b => {
@@ -3141,26 +3141,27 @@
           attachments.push({ cid, mimeType: 'image/gif', ext: 'gif', base64Data });
           return `cid:${cid}`;
         } catch (e) {
-          console.warn("Usando URL directa para GIF:", e);
           return gifUrl;
         }
       }
 
-      let htmlTable = `<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#fcfcfc" style="width:100%; max-width:850px; background-color:#fcfcfc; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; margin:0 auto;">`;
+      const transparentGif = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+      let htmlTable = `<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#ffffff" style="width:100%; max-width:850px; background-color:#ffffff; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; margin:0 auto;">`;
 
       let curY = 0;
 
       for (const row of rawRows) {
+        // Rellenar espacios horizontales vacíos con GIF transparente puro
         if (row.top > curY) {
           const gapH = row.top - curY;
-          const gapB64 = sliceMasterCanvas(masterCanvas, scale, 0, curY, 850, gapH);
-          const gapSrc = registerInlineImage(gapB64);
-          const gapStyle = `display:block; width:100%; max-width:850px; height:auto; border:0; outline:none; text-decoration:none; margin:0; padding:0;`;
-          htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#fcfcfc" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;"><p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${gapSrc}" width="850" style="${gapStyle}" alt="" /></p></td></tr>`;
+          const targetH = Math.max(1, Math.round(gapH));
+          const gapStyle = `display:block; width:100%; max-width:850px; height:${targetH}px; border:0; outline:none; text-decoration:none; margin:0; padding:0;`;
+          htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" style="width:100%; max-width:850px; padding:0; margin:0; font-size:0px; line-height:0px; mso-line-height-rule:exactly;"><p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${transparentGif}" width="850" height="${targetH}" style="${gapStyle}" alt="" /></p></td></tr>`;
         }
 
         const rowH = Math.max(1, row.bottom - row.top);
 
+        // Agrupar la fila actual en columnas estrictas
         let colGroups = [];
         let sortedByX = [...row.blocks].sort((a, b) => a.x - b.x || a.y - b.y);
         for (const b of sortedByX) {
@@ -3194,25 +3195,21 @@
         }
         if (xCursor < 850) columns.push({ x: xCursor, w: 850 - xCursor, blocks: [] });
 
-        htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#fcfcfc" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px;"><table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#fcfcfc" style="width:100%; max-width:850px; table-layout:fixed; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; background-color:#fcfcfc;"><tr style="font-size:0px; line-height:0px;">`;
+        htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" style="width:100%; max-width:850px; padding:0; margin:0; font-size:0px; line-height:0px;"><table width="100%" border="0" cellpadding="0" cellspacing="0" style="width:100%; max-width:850px; table-layout:fixed; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt;"><tr style="font-size:0px; line-height:0px;">`;
 
         for (const col of columns) {
           let pctW = ((col.w / 850) * 100).toFixed(4) + '%';
           let pxW = Math.max(1, Math.round(col.w));
 
-          htmlTable += `<td width="${pctW}" valign="top" align="center" bgcolor="#fcfcfc" style="width:${pctW}; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;">`;
+          htmlTable += `<td width="${pctW}" valign="top" align="center" style="width:${pctW}; padding:0; margin:0; font-size:0px; line-height:0px; mso-line-height-rule:exactly;">`;
 
-          // Aislar solo bloques activos (texto, links, gifs) para la generación
-          let activeBlocks = col.blocks.filter(b => b.href || (b.type === 'gif' && b.src) || b.type === 'text');
-
-          if (activeBlocks.length === 0) {
-            const segB64 = sliceMasterCanvas(masterCanvas, scale, col.x, row.top, col.w, rowH);
-            const segSrc = registerInlineImage(segB64);
-            const sStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
-            htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${segSrc}" width="${pxW}" style="${sStyle}" alt="" /></p>`;
+          if (col.blocks.length === 0) {
+            const targetH = Math.max(1, Math.round(rowH));
+            const sStyle = `display:block; width:100%; max-width:${pxW}px; height:${targetH}px; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
+            htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${transparentGif}" width="${pxW}" height="${targetH}" style="${sStyle}" alt="" /></p>`;
           } else {
             let yBoundaries = new Set([row.top, row.bottom]);
-            for (const b of activeBlocks) {
+            for (const b of col.blocks) {
               let bTop = Math.max(row.top, b.y);
               let bBot = Math.min(row.bottom, b.y + b.h);
               if (bTop < row.bottom) yBoundaries.add(bTop);
@@ -3226,70 +3223,68 @@
               let sliceH = sliceBottom - sliceTop;
               if (sliceH <= 0) continue;
 
-              let sliceHref = '';
-              let gifBlock = null;
-              let textBlock = null;
-
+              let targetBlock = null;
               for (const b of col.blocks) {
                 let overlapStart = Math.max(sliceTop, b.y);
                 let overlapEnd = Math.min(sliceBottom, b.y + b.h);
-                if (overlapEnd > overlapStart) {
-                  if (b.type === 'gif' && b.src) gifBlock = b;
-                  if (b.type === 'text') textBlock = b;
-                  if (b.href) sliceHref = b.href;
+                if (overlapEnd - overlapStart >= sliceH * 0.9) {
+                  targetBlock = b; break;
                 }
               }
 
+              let targetH = Math.max(1, Math.round(sliceH));
               let innerTag = '';
-              if (gifBlock) {
-                const targetH = Math.max(1, Math.round(sliceH));
-                const finalGifSrc = await registerGifSource(gifBlock.src);
+
+              if (targetBlock && targetBlock.type === 'gif' && targetBlock.src) {
+                const finalGifSrc = await registerGifSource(targetBlock.src);
                 const gifStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; max-height:${targetH}px; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
                 innerTag = `<img src="${finalGifSrc}" width="${pxW}" height="${targetH}" style="${gifStyle}" alt="" />`;
-              } else if (textBlock) {
-                const targetH = Math.max(1, Math.round(sliceH));
-                let alignStr = textBlock.textAlign || 'left';
-                let fontStr = textBlock.ffVal || 'Arial, Helvetica, sans-serif';
-                let fSize = textBlock.fsVal || 14;
-                let lHeight = textBlock.lhVal || 20;
-                let color = textBlock.colorVal || '#000000';
-                let pt = textBlock.ptVal || 0;
-                let px = textBlock.pxVal || 0;
+              } 
+              else if (targetBlock && targetBlock.type === 'text') {
+                let alignStr = targetBlock.textAlign || 'left';
+                let fontStr = targetBlock.ffVal || 'Arial, Helvetica, sans-serif';
+                let fSize = targetBlock.fsVal || 14;
+                let lHeight = targetBlock.lhVal || 20;
+                let color = targetBlock.colorVal || '#000000';
+                let pt = targetBlock.ptVal || 0;
+                let px = targetBlock.pxVal || 0;
                 
                 let vAlign = 'top';
-                if (textBlock.css && textBlock.css.includes('justify-content: center')) vAlign = 'middle';
-                else if (textBlock.css && textBlock.css.includes('justify-content: flex-end')) vAlign = 'bottom';
+                if (targetBlock.css && targetBlock.css.includes('justify-content: center')) vAlign = 'middle';
+                else if (targetBlock.css && targetBlock.css.includes('justify-content: flex-end')) vAlign = 'bottom';
 
-                let contentHtml = textBlock.html;
-                
-                let cleanHref = (sliceHref || '').trim();
-                if (cleanHref && !/^(https?:\/\/|mailto:|tel:)/i.test(cleanHref)) {
-                  cleanHref = 'https://' + cleanHref;
-                }
+                let contentHtml = targetBlock.html;
+                let sliceHref = targetBlock.href || '';
+                let cleanHref = sliceHref.trim();
+                if (cleanHref && !/^(https?:\/\/|mailto:|tel:)/i.test(cleanHref)) cleanHref = 'https://' + cleanHref;
 
                 if (cleanHref) {
                    contentHtml = `<a href="${cleanHref}" target="_blank" style="text-decoration:none; color:${color}; display:block;">${contentHtml}</a>`;
-                   sliceHref = ''; 
                 }
 
-                innerTag = `<table width="100%" height="${targetH}" border="0" cellpadding="0" cellspacing="0" style="width:100%; max-width:${pxW}px; height:${targetH}px; background-color:#fcfcfc; table-layout:fixed;">
+                innerTag = `<table width="100%" height="${targetH}" border="0" cellpadding="0" cellspacing="0" style="width:100%; max-width:${pxW}px; height:${targetH}px; table-layout:fixed; border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
                   <tr>
-                    <td align="${alignStr}" valign="${vAlign}" style="padding:${pt}px ${px}px 10px ${px}px; font-family:${fontStr.replace(/"/g, "'")}; font-size:${fSize}px; line-height:${lHeight}px; color:${color}; text-align:${alignStr}; word-break:break-word; width:100%;">
+                    <td align="${alignStr}" valign="${vAlign}" height="${targetH}" style="height:${targetH}px; padding:${pt}px ${px}px 10px ${px}px; font-family:${fontStr.replace(/"/g, "'")}; font-size:${fSize}px; line-height:${lHeight}px; color:${color}; text-align:${alignStr}; word-break:break-word; width:100%;">
                       ${contentHtml}
                     </td>
                   </tr>
                 </table>`;
-              } else {
+                targetBlock.tempHrefHandled = true; 
+              } 
+              else if (targetBlock && targetBlock.type === 'image') {
                 const segB64 = sliceMasterCanvas(masterCanvas, scale, col.x, sliceTop, col.w, sliceH);
                 const segSrc = registerInlineImage(segB64);
                 const sStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
                 innerTag = `<img src="${segSrc}" width="${pxW}" style="${sStyle}" alt="" />`;
+              } 
+              else {
+                const sStyle = `display:block; width:100%; max-width:${pxW}px; height:${targetH}px; border:0; outline:none; margin:0; padding:0;`;
+                innerTag = `<img src="${transparentGif}" width="${pxW}" height="${targetH}" style="${sStyle}" alt="" />`;
               }
 
-              let cleanHref = (sliceHref || '').trim();
-              if (cleanHref && !/^(https?:\/\/|mailto:|tel:)/i.test(cleanHref)) {
-                cleanHref = 'https://' + cleanHref;
-              }
+              let sliceHref = (targetBlock && !targetBlock.tempHrefHandled) ? (targetBlock.href || '') : '';
+              let cleanHref = sliceHref.trim();
+              if (cleanHref && !/^(https?:\/\/|mailto:|tel:)/i.test(cleanHref)) cleanHref = 'https://' + cleanHref;
 
               if (cleanHref) {
                 htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><a href="${cleanHref}" target="_blank" style="text-decoration:none; display:block; margin:0; padding:0; border:0; outline:none;">${innerTag}</a></p>`;
@@ -3336,13 +3331,13 @@
     p.MsoNormal, li.MsoNormal, div.MsoNormal { margin: 0cm !important; margin-bottom: 0pt !important; }
     table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse !important; border-spacing: 0 !important; }
     img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; display: block; line-height: 100%; height: auto; }
-    body { background-color: #fcfcfc !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    body { background-color: #ffffff !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
   </style>
 </head>
-<body bgcolor="#fcfcfc" style="margin:0; padding:0; background-color:#fcfcfc; font-family: Arial, Helvetica, sans-serif; width: 100%;">
-  <center style="width:100%; background-color:#fcfcfc;">
+<body bgcolor="#ffffff" style="margin:0; padding:0; background-color:#ffffff; font-family: Arial, Helvetica, sans-serif; width: 100%;">
+  <center style="width:100%; background-color:#ffffff;">
     <!--[if mso]>
-    <table width="850" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#fcfcfc"><tr><td width="850" align="center" valign="top" bgcolor="#fcfcfc">
+    <table width="850" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#ffffff"><tr><td width="850" align="center" valign="top" bgcolor="#ffffff">
     <![endif]-->
     ${htmlTable}
     <!--[if mso]>
