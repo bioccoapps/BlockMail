@@ -2976,6 +2976,27 @@
       return sliceCvs.toDataURL('image/png');
     }
 
+  function sliceMasterCanvas(masterCanvas, scale, x, y, w, h) {
+      const sliceCvs = document.createElement('canvas');
+      sliceCvs.width = Math.max(1, Math.round(w * scale));
+      sliceCvs.height = Math.max(1, Math.round(h * scale));
+      const sCtx = sliceCvs.getContext('2d');
+      sCtx.fillStyle = '#ffffff';
+      sCtx.fillRect(0, 0, sliceCvs.width, sliceCvs.height);
+      sCtx.drawImage(
+        masterCanvas,
+        Math.round(x * scale),
+        Math.round(y * scale),
+        Math.round(w * scale),
+        Math.round(h * scale),
+        0,
+        0,
+        sliceCvs.width,
+        sliceCvs.height
+      );
+      return sliceCvs.toDataURL('image/png');
+    }
+
     async function generateNewsletterDocument(isEML = false) {
       clearSelection();
       let subjectStr = subjectInput.value.trim(); 
@@ -3063,7 +3084,6 @@
       masterCanvas.width = 850 * scale;
       masterCanvas.height = totalHeight * scale;
       const masterCtx = masterCanvas.getContext('2d');
-      // Pintamos TODO el fondo del lienzo maestro de BLANCO PURO
       masterCtx.fillStyle = '#ffffff';
       masterCtx.fillRect(0, 0, masterCanvas.width, masterCanvas.height);
 
@@ -3092,7 +3112,7 @@
             b.gifDrawH = b.h;
           }
         } else if (b.type === 'text') {
-          // No dibujamos el texto para que no sea imagen
+          // Omitido para mantenerlo como HTML puro
           continue;
         } else if (b.type === 'image') {
           await drawBlockOnMasterCtx(masterCtx, b, scale);
@@ -3118,13 +3138,19 @@
       rawRows.sort((a, b) => a.top - b.top);
 
       let attachments = [];
-      function registerInlineImage(base64Url) {
+      
+      // Función para manejar las imágenes con un nombre predeterminado
+      function registerInlineImage(base64Url, customName = null) {
         if (!isEML) return base64Url;
-        let cid = 'img_' + attachments.length + '@newsletter';
+        let cid = customName ? customName : ('img_' + attachments.length + '@newsletter');
         let base64Data = base64Url.split(',')[1];
         attachments.push({ cid, mimeType: 'image/png', ext: 'png', base64Data });
         return `cid:${cid}`;
       }
+
+      // 🌟 CREAMOS UN ÚNICO PIXEL BLANCO 1x1 PARA LOS HUECOS
+      const whitePixelB64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
+      const whitePixelSrc = registerInlineImage(whitePixelB64, 'fondo_blanco');
 
       async function registerGifSource(gifUrl) {
         if (!isEML || !gifUrl) return gifUrl;
@@ -3152,13 +3178,12 @@
       let curY = 0;
 
       for (const row of rawRows) {
-        // En los huecos vacíos generamos una imagen blanca
+        // En los huecos estiramos el pixel blanco 1x1
         if (row.top > curY) {
           const gapH = row.top - curY;
-          const gapB64 = sliceMasterCanvas(masterCanvas, scale, 0, curY, 850, gapH);
-          const gapSrc = registerInlineImage(gapB64);
-          const gapStyle = `display:block; width:100%; max-width:850px; height:auto; border:0; outline:none; text-decoration:none; margin:0; padding:0;`;
-          htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#ffffff" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#ffffff; font-size:0px; line-height:0px; mso-line-height-rule:exactly;"><p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${gapSrc}" width="850" style="${gapStyle}" alt="" /></p></td></tr>`;
+          const targetH = Math.max(1, Math.round(gapH));
+          const gapStyle = `display:block; width:100%; max-width:850px; height:${targetH}px; border:0; outline:none; text-decoration:none; margin:0; padding:0;`;
+          htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#ffffff" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#ffffff; font-size:0px; line-height:0px; mso-line-height-rule:exactly;"><p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${whitePixelSrc}" width="850" height="${targetH}" style="${gapStyle}" alt="" /></p></td></tr>`;
         }
 
         const rowH = Math.max(1, row.bottom - row.top);
@@ -3205,10 +3230,9 @@
           htmlTable += `<td width="${pctW}" valign="top" align="center" bgcolor="#ffffff" style="width:${pctW}; padding:0; margin:0; font-size:0px; line-height:0px; mso-line-height-rule:exactly;">`;
 
           if (col.blocks.length === 0) {
-            const segB64 = sliceMasterCanvas(masterCanvas, scale, col.x, row.top, col.w, rowH);
-            const segSrc = registerInlineImage(segB64);
-            const sStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
-            htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${segSrc}" width="${pxW}" style="${sStyle}" alt="" /></p>`;
+            const targetH = Math.max(1, Math.round(rowH));
+            const sStyle = `display:block; width:100%; max-width:${pxW}px; height:${targetH}px; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
+            htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${whitePixelSrc}" width="${pxW}" height="${targetH}" style="${sStyle}" alt="" /></p>`;
           } else {
             let yBoundaries = new Set([row.top, row.bottom]);
             for (const b of col.blocks) {
@@ -3264,30 +3288,30 @@
 
                 if (cleanHref) {
                    contentHtml = `<a href="${cleanHref}" target="_blank" style="text-decoration:none; color:${color}; display:block;">${contentHtml}</a>`;
-                   sliceHref = ''; // Lo vaciamos porque ya está en el texto
+                   sliceHref = ''; // Se resetea para no envolver la tabla completa
                 }
 
-                // Generamos la imagen blanca para el fondo de este texto
-                const bgB64 = sliceMasterCanvas(masterCanvas, scale, col.x, sliceTop, col.w, sliceH);
-                const bgSrc = registerInlineImage(bgB64);
-
-                // El atributo background en la celda fuerza al cliente de correo a mantener la imagen (y por lo tanto, el color blanco)
+                // Usamos colores HTML nativos y el gradiente CSS en lugar de background=cid para evitar adjuntos
                 innerTag = `<table width="100%" height="${targetH}" border="0" cellpadding="0" cellspacing="0" style="width:100%; max-width:${pxW}px; height:${targetH}px; table-layout:fixed; border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
                   <tr>
-                    <td background="${bgSrc}" bgcolor="#ffffff" align="${alignStr}" valign="${vAlign}" height="${targetH}" style="height:${targetH}px; padding:${pt}px ${px}px 10px ${px}px; font-family:${fontStr.replace(/"/g, "'")}; font-size:${fSize}px; line-height:${lHeight}px; color:${color}; text-align:${alignStr}; word-break:break-word; width:100%; background-image:url('${bgSrc}'); background-repeat:no-repeat; background-size:cover;">
+                    <td bgcolor="#ffffff" align="${alignStr}" valign="${vAlign}" height="${targetH}" style="background-color:#ffffff; background-image:linear-gradient(#ffffff, #ffffff); height:${targetH}px; padding:${pt}px ${px}px 10px ${px}px; font-family:${fontStr.replace(/"/g, "'")}; font-size:${fSize}px; line-height:${lHeight}px; color:${color}; text-align:${alignStr}; word-break:break-word; width:100%;">
                       ${contentHtml}
                     </td>
                   </tr>
                 </table>`;
                 targetBlock.tempHrefHandled = true; 
               } 
-              else {
-                // Para las imágenes y huecos, simplemente cortamos la foto (que ahora es blanco puro)
-                if (targetBlock) sliceHref = targetBlock.href || '';
+              else if (targetBlock && targetBlock.type === 'image') {
+                sliceHref = targetBlock.href || '';
                 const segB64 = sliceMasterCanvas(masterCanvas, scale, col.x, sliceTop, col.w, sliceH);
                 const segSrc = registerInlineImage(segB64);
                 const sStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
                 innerTag = `<img src="${segSrc}" width="${pxW}" style="${sStyle}" alt="" />`;
+              } 
+              else {
+                // Hueco vacío dentro de una columna: usamos el pixel blanco
+                const sStyle = `display:block; width:100%; max-width:${pxW}px; height:${targetH}px; border:0; outline:none; margin:0; padding:0;`;
+                innerTag = `<img src="${whitePixelSrc}" width="${pxW}" height="${targetH}" style="${sStyle}" alt="" />`;
               }
 
               let cleanHref = sliceHref.trim();
