@@ -3089,6 +3089,9 @@
           } else {
             b.gifDrawH = b.h;
           }
+        } else if (b.type === 'text') {
+          // EXCLUSIÓN CLAVE: No dibujamos el texto en el canvas maestro, lo inyectaremos como HTML
+          continue;
         } else {
           await drawBlockOnMasterCtx(masterCtx, b, scale);
         }
@@ -3199,14 +3202,17 @@
 
           htmlTable += `<td width="${pctW}" valign="top" align="center" bgcolor="#fcfcfc" style="width:${pctW}; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;">`;
 
-          if (col.blocks.length === 0) {
+          // Aislar solo bloques activos (texto, links, gifs) para la generación
+          let activeBlocks = col.blocks.filter(b => b.href || (b.type === 'gif' && b.src) || b.type === 'text');
+
+          if (activeBlocks.length === 0) {
             const segB64 = sliceMasterCanvas(masterCanvas, scale, col.x, row.top, col.w, rowH);
             const segSrc = registerInlineImage(segB64);
             const sStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
             htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${segSrc}" width="${pxW}" style="${sStyle}" alt="" /></p>`;
           } else {
             let yBoundaries = new Set([row.top, row.bottom]);
-            for (const b of col.blocks) {
+            for (const b of activeBlocks) {
               let bTop = Math.max(row.top, b.y);
               let bBot = Math.min(row.bottom, b.y + b.h);
               if (bTop < row.bottom) yBoundaries.add(bTop);
@@ -3222,12 +3228,14 @@
 
               let sliceHref = '';
               let gifBlock = null;
+              let textBlock = null;
 
               for (const b of col.blocks) {
                 let overlapStart = Math.max(sliceTop, b.y);
                 let overlapEnd = Math.min(sliceBottom, b.y + b.h);
                 if (overlapEnd > overlapStart) {
                   if (b.type === 'gif' && b.src) gifBlock = b;
+                  if (b.type === 'text') textBlock = b;
                   if (b.href) sliceHref = b.href;
                 }
               }
@@ -3238,6 +3246,39 @@
                 const finalGifSrc = await registerGifSource(gifBlock.src);
                 const gifStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; max-height:${targetH}px; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
                 innerTag = `<img src="${finalGifSrc}" width="${pxW}" height="${targetH}" style="${gifStyle}" alt="" />`;
+              } else if (textBlock) {
+                const targetH = Math.max(1, Math.round(sliceH));
+                let alignStr = textBlock.textAlign || 'left';
+                let fontStr = textBlock.ffVal || 'Arial, Helvetica, sans-serif';
+                let fSize = textBlock.fsVal || 14;
+                let lHeight = textBlock.lhVal || 20;
+                let color = textBlock.colorVal || '#000000';
+                let pt = textBlock.ptVal || 0;
+                let px = textBlock.pxVal || 0;
+                
+                let vAlign = 'top';
+                if (textBlock.css && textBlock.css.includes('justify-content: center')) vAlign = 'middle';
+                else if (textBlock.css && textBlock.css.includes('justify-content: flex-end')) vAlign = 'bottom';
+
+                let contentHtml = textBlock.html;
+                
+                let cleanHref = (sliceHref || '').trim();
+                if (cleanHref && !/^(https?:\/\/|mailto:|tel:)/i.test(cleanHref)) {
+                  cleanHref = 'https://' + cleanHref;
+                }
+
+                if (cleanHref) {
+                   contentHtml = `<a href="${cleanHref}" target="_blank" style="text-decoration:none; color:${color}; display:block;">${contentHtml}</a>`;
+                   sliceHref = ''; 
+                }
+
+                innerTag = `<table width="100%" height="${targetH}" border="0" cellpadding="0" cellspacing="0" style="width:100%; max-width:${pxW}px; height:${targetH}px; background-color:#fcfcfc; table-layout:fixed;">
+                  <tr>
+                    <td align="${alignStr}" valign="${vAlign}" style="padding:${pt}px ${px}px 10px ${px}px; font-family:${fontStr.replace(/"/g, "'")}; font-size:${fSize}px; line-height:${lHeight}px; color:${color}; text-align:${alignStr}; word-break:break-word; width:100%;">
+                      ${contentHtml}
+                    </td>
+                  </tr>
+                </table>`;
               } else {
                 const segB64 = sliceMasterCanvas(masterCanvas, scale, col.x, sliceTop, col.w, sliceH);
                 const segSrc = registerInlineImage(segB64);
