@@ -677,7 +677,7 @@
       <button class="ws-btn-secondary" style="margin-top:auto;" onclick="openGridSettingsModal()"><span class="ms-icon">tune</span> Tema y Ajustes</button>
     </div>
     <div class="ws-main">
-      <div class="ws-title">Te damos la bienvenida a BlockMail 2.0</div>
+      <div class="ws-title">Te damos la bienvenida a BlockMail</div>
       <div class="ws-recents-title">Recientes (Últimos 10)</div>
       <div class="recent-grid" id="recent-projects-grid"></div>
     </div>
@@ -699,7 +699,7 @@
   <div id="topbar">
     <div style="display:flex; align-items:center; gap: 12px;">
       <span style="font-weight:700; color:var(--md-text); font-size:15.5px; display:flex; align-items:center; gap:8px;">
-        <img src="app-logo.ico" style="width:24px; height:24px; object-fit:contain;" alt="" onerror="this.style.display='none'"> BlockMail 2.0
+        <img src="app-logo.ico" style="width:24px; height:24px; object-fit:contain;" alt="" onerror="this.style.display='none'"> BlockMail
       </span>
       <span id="app-version" style="font-size:11.5px; color:var(--md-primary); font-weight:600; margin-right:6px;"></span>
       <label style="font-size: 12.5px; color: var(--md-text-muted); font-weight: 600;">Asunto:</label>
@@ -1937,7 +1937,8 @@
           loadProjectIntoTab(result.filePaths[0], JSON.parse(fs.readFileSync(result.filePaths[0], 'utf-8'))); 
       } catch (err) { showSalsaToast("Archivo inválido", "No se pudo abrir el proyecto seleccionado.", "error"); }
     }
-// ==========================================
+
+    // ==========================================
     // CORE EDITOR (SELECCIÓN Y PROPIEDADES)
     // ==========================================
     const selectionBox = document.getElementById('selection-box'); 
@@ -2029,16 +2030,20 @@
         propW.value = block.offsetWidth; propH.value = block.offsetHeight; 
         
         const type = block.dataset.type; 
-        document.getElementById('media-properties').style.display = (type === 'image' || type === 'gif') ? 'block' : 'none';
+        
+        // AHORA MOSTRAMOS MEDIA-PROPERTIES TAMBIÉN PARA TEXTO (para que aparezca el input del Link)
+        document.getElementById('media-properties').style.display = (type === 'image' || type === 'gif' || type === 'text') ? 'block' : 'none';
         document.getElementById('text-props').style.display = (type === 'text') ? 'block' : 'none';
 
-        if (type === 'image' || type === 'gif') { 
+        if (type === 'image' || type === 'gif' || type === 'text') { 
             document.getElementById('image-props').style.display = (type === 'image') ? 'block' : 'none'; 
             document.getElementById('gif-props').style.display = (type === 'gif') ? 'block' : 'none'; 
             if (type === 'image') document.getElementById('image-url').value = block.dataset.src || ''; 
             if (type === 'gif') document.getElementById('gif-url').value = block.dataset.src || ''; 
             document.getElementById('prop-href').value = block.dataset.href || ''; 
-        } else if (type === 'text') { 
+        } 
+        
+        if (type === 'text') { 
             let tEl = block.querySelector('.block-text'); 
             if (tEl) { 
                 let compStyle = window.getComputedStyle(tEl); 
@@ -3097,7 +3102,8 @@
         let placed = false;
         for (let i = 0; i < rawRows.length; i++) {
           let r = rawRows[i];
-          if (b.y < r.bottom && b.y + b.h > r.top) {
+          // Tolerancia de 1px añadida acá
+          if (b.y < r.bottom - 1 && b.y + b.h > r.top + 1) {
             r.blocks.push(b);
             r.top = Math.min(r.top, b.y);
             r.bottom = Math.max(r.bottom, b.y + b.h);
@@ -3179,65 +3185,116 @@
 
           htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#fcfcfc" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;"><p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${imgSrc}" width="850" style="${imgStyle}" alt="" /></p></td></tr>`;
         } else {
-          band.blocks.sort((a, b) => a.x - b.x);
-          let segments = [];
-          let xCursor = 0;
+          // 1. Agrupar los bloques de la banda en columnas según su posición X
+          let sortedByX = [...band.blocks].sort((a, b) => a.x - b.x || a.y - b.y);
+          let colGroups = [];
+          for (const b of sortedByX) {
+            let bLeft = Math.max(0, b.x);
+            let bRight = Math.min(850, b.x + b.w);
+            if (bRight <= bLeft) continue;
 
-          for (const b of band.blocks) {
-            let startX = Math.max(xCursor, b.x);
-            let gapW = startX - xCursor;
-            if (gapW > 0) {
-              segments.push({ type: 'slice', x: xCursor, w: gapW, href: '' });
-              xCursor = startX;
-            }
-            let safeW = Math.min(850 - xCursor, b.w - (startX - b.x));
-            if (safeW > 0) {
-              if (b.type === 'gif' && b.src) {
-                segments.push({
-                  type: 'gif',
-                  x: xCursor,
-                  w: safeW,
-                  h: b.gifDrawH || b.h,
-                  src: b.src,
-                  href: b.href
-                });
-              } else {
-                segments.push({ type: 'slice', x: xCursor, w: safeW, href: b.href });
+            let placed = false;
+            for (const cg of colGroups) {
+              if (bLeft < cg.right && bRight > cg.left) {
+                cg.blocks.push(b);
+                cg.left = Math.min(cg.left, bLeft);
+                cg.right = Math.max(cg.right, bRight);
+                placed = true;
+                break;
               }
-              xCursor += safeW;
+            }
+            if (!placed) {
+              colGroups.push({ left: bLeft, right: bRight, blocks: [b] });
+            }
+          }
+          colGroups.sort((a, b) => a.left - b.left);
+
+          // 2. Armar las columnas finales incluyendo los espacios vacíos (gaps) en X
+          let columns = [];
+          let xCursor = 0;
+          for (const cg of colGroups) {
+            let startX = Math.max(xCursor, cg.left);
+            if (startX > xCursor) {
+              columns.push({ x: xCursor, w: startX - xCursor, blocks: [] });
+            }
+            let colW = Math.min(850, cg.right) - startX;
+            if (colW > 0) {
+              columns.push({ x: startX, w: colW, blocks: cg.blocks });
+              xCursor = startX + colW;
             }
           }
           if (xCursor < 850) {
-            segments.push({ type: 'slice', x: xCursor, w: 850 - xCursor, href: '' });
+            columns.push({ x: xCursor, w: 850 - xCursor, blocks: [] });
           }
 
           htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#fcfcfc" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px;"><table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#fcfcfc" style="width:100%; max-width:850px; table-layout:fixed; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; background-color:#fcfcfc;"><tr style="font-size:0px; line-height:0px;">`;
 
-          for (const seg of segments) {
-            let pctW = ((seg.w / 850) * 100).toFixed(4) + '%';
-            let pxW = Math.max(1, Math.round(seg.w));
-            
-            htmlTable += `<td width="${pctW}" valign="middle" align="center" bgcolor="#fcfcfc" style="width:${pctW}; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;">`;
+          // 3. Dentro de cada columna, cortar verticalmente (en Y) cada bloque con su propio link
+          for (const col of columns) {
+            let pctW = ((col.w / 850) * 100).toFixed(4) + '%';
+            let pxW = Math.max(1, Math.round(col.w));
 
-            let innerTag = '';
-            if (seg.type === 'gif') {
-              const targetH = Math.max(1, Math.round(seg.h));
-              const finalGifSrc = await registerGifSource(seg.src);
-              const gifStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; max-height:${targetH}px; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
+            htmlTable += `<td width="${pctW}" valign="top" align="center" bgcolor="#fcfcfc" style="width:${pctW}; padding:0; margin:0; background-color:#fcfcfc; font-size:0px; line-height:0px; mso-line-height-rule:exactly;">`;
 
-              // Etiqueta <img> estándar para todos los clientes (permite animación real del GIF y respeta su ancho pxW sin estirarse)
-              innerTag = `<img src="${finalGifSrc}" width="${pxW}" height="${targetH}" style="${gifStyle}" alt="" />`;
-            } else {
-              const segB64 = sliceMasterCanvas(masterCanvas, scale, seg.x, band.top, seg.w, bandH);
-              const segSrc = registerInlineImage(segB64);
-              let sStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
-              innerTag = `<img src="${segSrc}" width="${pxW}" style="${sStyle}" alt="" />`;
+            let vSlices = [];
+            let yCursor = band.top;
+            let sortedByY = [...col.blocks].sort((a, b) => a.y - b.y);
+
+            for (const b of sortedByY) {
+              let startY = Math.max(yCursor, b.y);
+              if (startY > yCursor) {
+                vSlices.push({ type: 'slice', y: yCursor, h: startY - yCursor, href: '' });
+              }
+              let sliceH = Math.min(band.bottom, b.y + b.h) - startY;
+              if (sliceH > 0) {
+                if (b.type === 'gif' && b.src) {
+                  vSlices.push({
+                    type: 'gif',
+                    y: startY,
+                    h: b.gifDrawH || sliceH,
+                    src: b.src,
+                    href: b.href
+                  });
+                } else {
+                  vSlices.push({
+                    type: 'slice',
+                    y: startY,
+                    h: sliceH,
+                    href: b.href
+                  });
+                }
+                yCursor = startY + sliceH;
+              }
+            }
+            if (yCursor < band.bottom) {
+              vSlices.push({ type: 'slice', y: yCursor, h: band.bottom - yCursor, href: '' });
             }
 
-            if (seg.href) {
-              htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><a href="${seg.href}" target="_blank" style="text-decoration:none; display:block; margin:0; padding:0; border:0; outline:none;">${innerTag}</a></p>`;
-            } else {
-              htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;">${innerTag}</p>`;
+            // Renderizar cada sub-recorte vertical con su etiqueta <a> correspondiente
+            for (const vs of vSlices) {
+              let innerTag = '';
+              if (vs.type === 'gif') {
+                const targetH = Math.max(1, Math.round(vs.h));
+                const finalGifSrc = await registerGifSource(vs.src);
+                const gifStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; max-height:${targetH}px; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
+                innerTag = `<img src="${finalGifSrc}" width="${pxW}" height="${targetH}" style="${gifStyle}" alt="" />`;
+              } else {
+                const segB64 = sliceMasterCanvas(masterCanvas, scale, col.x, vs.y, col.w, vs.h);
+                const segSrc = registerInlineImage(segB64);
+                const sStyle = `display:block; width:100%; max-width:${pxW}px; height:auto; border:0; outline:none; text-decoration:none; margin:0 auto; padding:0;`;
+                innerTag = `<img src="${segSrc}" width="${pxW}" style="${sStyle}" alt="" />`;
+              }
+
+              let cleanHref = (vs.href || '').trim();
+              if (cleanHref && !/^(https?:\/\/|mailto:|tel:)/i.test(cleanHref)) {
+                cleanHref = 'https://' + cleanHref;
+              }
+
+              if (cleanHref) {
+                htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><a href="${cleanHref}" target="_blank" style="text-decoration:none; display:block; margin:0; padding:0; border:0; outline:none;">${innerTag}</a></p>`;
+              } else {
+                htmlTable += `<p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;">${innerTag}</p>`;
+              }
             }
 
             htmlTable += `</td>`;
