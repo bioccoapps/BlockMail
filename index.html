@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>BlockMail Editor</title>
+  <title>DashPro Editor</title>
   <link rel="icon" type="image/x-icon" href="app-logo.ico">
   <!-- GOOGLE FONTS & MATERIAL SYMBOLS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -379,9 +379,60 @@
     .bg-gif { background-color: #fcfcfc; } 
     .bg-spacer { background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 10px, #fcfcfc 10px, #fcfcfc 20px); }
     
-    .block-text { width: 100%; height: 100%; box-sizing: border-box; cursor: default; overflow: hidden; pointer-events: none; user-select: none; background-color: #fcfcfc !important; color: #000000; }
-    .block-text.editing { cursor: text; pointer-events: auto; outline: none; border: 1px dashed var(--md-primary); user-select: text; }
-    .block-text * { font-family: inherit !important; font-size: inherit !important; line-height: inherit !important; margin: 0 !important; padding: 0 !important; }
+    /* CONTENEDOR DE ALINEACIÓN VERTICAL SEPARADO DEL FLUJO INLINE DEL TEXTO */
+    .block-text-wrap {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      overflow: hidden;
+      background-color: #fcfcfc !important;
+      pointer-events: none;
+    }
+    .block-text-wrap.editing-wrap {
+      pointer-events: auto;
+      outline: none;
+      border: 1px dashed var(--md-primary);
+    }
+    .block-text {
+      width: 100%;
+      height: auto !important;
+      max-height: 100%;
+      display: block !important;
+      box-sizing: border-box;
+      cursor: default;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+      background-color: transparent !important;
+      color: #000000;
+      word-break: break-word;
+    }
+    .block-text.editing {
+      cursor: text;
+      pointer-events: auto;
+      outline: none;
+      border: none;
+      user-select: text;
+    }
+    .block-text * {
+      font-family: inherit !important;
+      font-size: inherit !important;
+      line-height: inherit !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .block-text b,
+    .block-text strong,
+    .block-text i,
+    .block-text em,
+    .block-text u,
+    .block-text span,
+    .block-text font {
+      display: inline !important;
+    }
     
     .delete-btn { position: absolute; top: -12px; right: -12px; background: #e74c3c; color: white; border: 2px solid #fff; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; z-index: 200; pointer-events: auto; font-size: 11px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
     .block.selected .delete-btn { display: flex; align-items: center; justify-content: center; }
@@ -612,7 +663,7 @@
   <!-- MODAL DE AJUSTES DE GRILLA Y TEMA DE INTERFAZ -->
   <div id="grid-settings-modal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
-      <div class="modal-title"><span class="ms-icon" style="color:var(--md-primary);">tune</span> Ajustes de BlockMail</div>
+      <div class="modal-title"><span class="ms-icon" style="color:var(--md-primary);">tune</span> Ajustes de DashPro</div>
       <div class="modal-text" style="margin-bottom: 16px;">Personalizá el tema visual de la app, la cantidad de columnas y el espacio uniforme entre ellas.</div>
       
       <!-- SELECTOR DE TEMA: CLARO, GRIS, OSCURO -->
@@ -671,13 +722,13 @@
   <!-- PANTALLA DE BIENVENIDA -->
   <div id="welcome-screen">
     <div class="ws-sidebar">
-      <h1><img src="app-logo.ico" style="width: 32px; height: 32px; object-fit: contain;" alt="" onerror="this.style.display='none'"> BlockMail <small id="ws-app-version" style="font-size: 12px; color: var(--md-text-muted); font-weight: normal;"></small></h1>
+      <h1><img src="app-logo.ico" style="width: 32px; height: 32px; object-fit: contain;" alt="" onerror="this.style.display='none'"> DashPro <small id="ws-app-version" style="font-size: 12px; color: var(--md-text-muted); font-weight: normal;"></small></h1>
       <button class="ws-btn-primary" onclick="showNewProjectModal()"><span class="ms-icon">add_box</span> Archivo nuevo</button>
       <button class="ws-btn-secondary" onclick="triggerLoadProject()"><span class="ms-icon">folder_open</span> Abrir proyecto</button>
       <button class="ws-btn-secondary" style="margin-top:auto;" onclick="openGridSettingsModal()"><span class="ms-icon">tune</span> Tema y Ajustes</button>
     </div>
     <div class="ws-main">
-      <div class="ws-title">Te damos la bienvenida a BlockMail</div>
+      <div class="ws-title">Te damos la bienvenida a DashPro</div>
       <div class="ws-recents-title">Recientes (Últimos 10)</div>
       <div class="recent-grid" id="recent-projects-grid"></div>
     </div>
@@ -699,7 +750,7 @@
   <div id="topbar">
     <div style="display:flex; align-items:center; gap: 12px;">
       <span style="font-weight:700; color:var(--md-text); font-size:15.5px; display:flex; align-items:center; gap:8px;">
-        <img src="app-logo.ico" style="width:24px; height:24px; object-fit:contain;" alt="" onerror="this.style.display='none'"> BlockMail
+        <img src="app-logo.ico" style="width:24px; height:24px; object-fit:contain;" alt="" onerror="this.style.display='none'"> DashPro
       </span>
       <span id="app-version" style="font-size:11.5px; color:var(--md-primary); font-weight:600; margin-right:6px;"></span>
       <label style="font-size: 12.5px; color: var(--md-text-muted); font-weight: 600;">Asunto:</label>
@@ -899,10 +950,10 @@
             
             <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:5px; margin-top:15px;">Formato y Color</label>
             <div class="align-group" style="margin-bottom: 8px;">
-              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('bold')" title="Negrita"><b>B</b></button>
-              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('italic')" title="Cursiva"><i>I</i></button>
-              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('underline')" title="Subrayado"><u>U</u></button>
-              <input type="color" id="inline-color" title="Color Selección" style="width:25%; height:34px; margin-top:0; background:none; border:1px solid var(--md-border); border-radius:6px; cursor:pointer;" oninput="inlineFormat('foreColor', this.value)" onchange="inlineFormat('foreColor', this.value);">
+              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('bold')" title="Negrita (Bloque o Selección)"><b>B</b></button>
+              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('italic')" title="Cursiva (Bloque o Selección)"><i>I</i></button>
+              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('underline')" title="Subrayado (Bloque o Selección)"><u>U</u></button>
+              <input type="color" id="inline-color" title="Color (Bloque o Selección)" style="width:25%; height:34px; margin-top:0; background:none; border:1px solid var(--md-border); border-radius:6px; cursor:pointer;" onmousedown="preserveSelectionForColorPicker()" oninput="inlineFormat('foreColor', this.value)" onchange="inlineFormat('foreColor', this.value);">
             </div>
             
             <div id="palette-container" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; background: var(--md-surface); padding: 8px; border: 1px solid var(--md-border); border-radius:6px;"></div>
@@ -1873,7 +1924,7 @@
           const result = await ipcRenderer.invoke('show-save-dialog', { 
               title: 'Guardar Proyecto', 
               defaultPath: defaultName, 
-              filters: [{ name: 'Proyecto BlockMail', extensions: ['bmail'] }] 
+              filters: [{ name: 'Proyecto DashPro', extensions: ['bmail'] }] 
           });
           if (result.canceled || !result.filePath) return false;
           finalPath = result.filePath;
@@ -1930,15 +1981,14 @@
     async function triggerLoadProject() { 
       if (!ipcRenderer) { document.getElementById('project-upload').click(); return; }
       const result = await ipcRenderer.invoke('show-open-dialog', { 
-          filters: [{ name: 'Proyecto BlockMail', extensions: ['bmail'] }] 
+          filters: [{ name: 'Proyecto DashPro', extensions: ['bmail'] }] 
       });
       if (result.canceled || result.filePaths.length === 0) return;
       try { 
           loadProjectIntoTab(result.filePaths[0], JSON.parse(fs.readFileSync(result.filePaths[0], 'utf-8'))); 
       } catch (err) { showSalsaToast("Archivo inválido", "No se pudo abrir el proyecto seleccionado.", "error"); }
     }
-
-    // ==========================================
+// ==========================================
     // CORE EDITOR (SELECCIÓN Y PROPIEDADES)
     // ==========================================
     const selectionBox = document.getElementById('selection-box'); 
@@ -1952,6 +2002,10 @@
     let selectedBlocks = new Set(); 
     let clipboard = []; 
     let savedRange = null; 
+    let lockedSelectionRange = null;
+    let lockedSelectionTextEl = null;
+    let isUsingColorPicker = false;
+    let isProgrammaticFormat = false;
 
     window.onload = function() {
       setAppTheme(currentAppTheme, true);
@@ -1992,10 +2046,16 @@
     }
 
     function clearSelection() { 
+        isUsingColorPicker = false;
+        savedRange = null;
+        lockedSelectionRange = null;
+        lockedSelectionTextEl = null;
         selectedBlocks.forEach(block => { 
             block.classList.remove('selected'); 
             const textContent = block.querySelector('.block-text'); 
+            const textWrap = block.querySelector('.block-text-wrap');
             if (textContent) { textContent.classList.remove('editing'); textContent.contentEditable = false; } 
+            if (textWrap) { textWrap.classList.remove('editing-wrap'); }
         }); 
         selectedBlocks.clear(); 
         updatePropertiesUI(); 
@@ -2011,7 +2071,9 @@
     function removeFromSelection(block) { 
         selectedBlocks.delete(block); block.classList.remove('selected'); 
         const textContent = block.querySelector('.block-text'); 
+        const textWrap = block.querySelector('.block-text-wrap');
         if (textContent) { textContent.classList.remove('editing'); textContent.contentEditable = false; } 
+        if (textWrap) { textWrap.classList.remove('editing-wrap'); }
         updatePropertiesUI(); updateMultiSelectionBoundingBox(); 
     }
 
@@ -2050,6 +2112,8 @@
                 document.getElementById('prop-line-height').value = parseInt(tEl.style.lineHeight || compStyle.lineHeight) || 20; 
                 document.getElementById('prop-padding-top').value = parseInt(tEl.style.paddingTop || compStyle.paddingTop) || 10; 
                 document.getElementById('prop-padding-sides').value = parseInt(tEl.style.paddingLeft || compStyle.paddingLeft) || 15; 
+                const colorInput = document.getElementById('inline-color');
+                if (colorInput) colorInput.value = rgbToHex(tEl.style.color || compStyle.color || '#000000');
             } 
         }
       } else { 
@@ -2146,10 +2210,13 @@
         if (selectedBlocks.size === 0) return; 
         selectedBlocks.forEach(block => { 
             if (block.dataset.type === 'text') { 
+                let wrap = block.querySelector('.block-text-wrap');
                 let tEl = block.querySelector('.block-text'); 
-                tEl.style.display = 'flex'; 
-                tEl.style.flexDirection = 'column'; 
-                tEl.style.justifyContent = align; 
+                if (wrap) wrap.style.justifyContent = align;
+                if (tEl) {
+                    tEl.style.display = 'block';
+                    tEl.style.justifyContent = align; 
+                }
             } 
         }); 
         saveState(); 
@@ -2272,42 +2339,156 @@
       reader.readAsArrayBuffer(file); e.target.value = '';
     }
 
+    // ==========================================
+    // FORMATO INTELIGENTE: SELECCIÓN DE PALABRAS O BLOQUE COMPLETO (1 CLIC)
+    // ==========================================
     document.addEventListener('selectionchange', () => { 
+        if (isProgrammaticFormat) return;
         const active = document.activeElement; 
         if (active && active.classList.contains('editing')) { 
             const sel = window.getSelection(); 
-            if (sel.rangeCount > 0) savedRange = sel.getRangeAt(0); 
+            if (sel && sel.rangeCount > 0) {
+                const r = sel.getRangeAt(0);
+                if (!r.collapsed && active.contains(r.commonAncestorContainer)) {
+                    savedRange = r.cloneRange();
+                } else if (r.collapsed && !isUsingColorPicker) {
+                    savedRange = null;
+                    lockedSelectionRange = null;
+                    lockedSelectionTextEl = null;
+                }
+            }
         } 
     });
 
+    function preserveSelectionForColorPicker() {
+      isUsingColorPicker = true;
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0 && !sel.isCollapsed && sel.toString().length > 0) {
+        const range = sel.getRangeAt(0);
+        const editingEl = document.querySelector('.block-text.editing');
+        if (editingEl && editingEl.contains(range.commonAncestorContainer)) {
+          lockedSelectionRange = range.cloneRange();
+          lockedSelectionTextEl = editingEl;
+          return;
+        }
+      }
+      if (savedRange && !savedRange.collapsed && savedRange.toString().length > 0 && selectedBlocks.size === 1) {
+        const block = Array.from(selectedBlocks)[0];
+        const textEl = block.querySelector('.block-text');
+        if (textEl && textEl.classList.contains('editing') && textEl.contains(savedRange.commonAncestorContainer)) {
+          lockedSelectionRange = savedRange.cloneRange();
+          lockedSelectionTextEl = textEl;
+          return;
+        }
+      }
+      lockedSelectionRange = null;
+      lockedSelectionTextEl = null;
+    }
+
+    function isPlaceholderText(textEl) {
+      if (!textEl) return true;
+      const html = textEl.innerHTML.trim();
+      return html === '' || html.includes('icon-text.png') || html.includes('ms-icon');
+    }
+
     function inlineFormat(command, value = null) {
-      const active = document.activeElement; let textIsSelected = false; const sel = window.getSelection();
-      
-      if (active && active.classList.contains('editing')) { 
-          if (sel.toString().length > 0) textIsSelected = true; 
-      } else if (savedRange && selectedBlocks.size === 1) {
-         let block = Array.from(selectedBlocks)[0]; let textEl = block.querySelector('.block-text');
-         if (textEl && textEl.contains(savedRange.commonAncestorContainer)) { 
-             sel.removeAllRanges(); sel.addRange(savedRange); 
-             if (sel.toString().length > 0) textIsSelected = true; 
-         }
+      const sel = window.getSelection();
+      let targetRange = null;
+      let targetEditingEl = null;
+
+      // 1. Verificar si hay palabras seleccionadas activamente
+      const active = document.activeElement;
+      if (active && active.classList.contains('editing') && sel && sel.rangeCount > 0 && !sel.isCollapsed && sel.toString().length > 0) {
+        targetRange = sel.getRangeAt(0).cloneRange();
+        targetEditingEl = active;
+      } else if (lockedSelectionRange && lockedSelectionTextEl && lockedSelectionRange.toString().length > 0) {
+        targetRange = lockedSelectionRange.cloneRange();
+        targetEditingEl = lockedSelectionTextEl;
+      } else if (savedRange && !savedRange.collapsed && savedRange.toString().length > 0 && selectedBlocks.size === 1) {
+        let block = Array.from(selectedBlocks)[0];
+        let textEl = block.querySelector('.block-text');
+        if (textEl && textEl.classList.contains('editing') && textEl.contains(savedRange.commonAncestorContainer)) {
+          targetRange = savedRange.cloneRange();
+          targetEditingEl = textEl;
+        }
       }
-      
-      if (command === 'foreColor' && !textIsSelected && selectedBlocks.size > 0) { 
-          selectedBlocks.forEach(block => { 
-              if (block.dataset.type === 'text') { 
-                  let textEl = block.querySelector('.block-text'); 
-                  if (textEl) { 
-                      textEl.style.color = value; 
-                      textEl.querySelectorAll('*').forEach(child => { if (child.style.color) child.style.color = ''; }); 
-                  } 
-              } 
-          }); 
-      } else { 
-          document.execCommand(command, false, value); 
+
+      // CASO A: Hay una selección parcial de palabras (doble clic + pintado de texto)
+      if (targetRange && targetEditingEl) {
+        isProgrammaticFormat = true;
+        const wrap = targetEditingEl.closest('.block-text-wrap');
+        targetEditingEl.contentEditable = true;
+        targetEditingEl.classList.add('editing');
+        if (wrap) wrap.classList.add('editing-wrap');
+
+        targetEditingEl.focus();
+        sel.removeAllRanges();
+        sel.addRange(targetRange);
+        document.execCommand(command, false, value);
+
+        if (sel.rangeCount > 0) {
+          savedRange = sel.getRangeAt(0).cloneRange();
+          if (isUsingColorPicker) {
+            lockedSelectionRange = savedRange.cloneRange();
+            lockedSelectionTextEl = targetEditingEl;
+          }
+        }
+        isProgrammaticFormat = false;
+      } 
+      // CASO B: Solo está seleccionado el bloque (1 clic) o no hay palabras pintadas -> Aplica a todo el bloque
+      else if (selectedBlocks.size > 0) {
+        selectedBlocks.forEach(block => {
+          if (block.dataset.type !== 'text') return;
+          let textEl = block.querySelector('.block-text');
+          if (!textEl) return;
+
+          if (command === 'foreColor') {
+            textEl.style.color = value;
+            textEl.querySelectorAll('*').forEach(child => {
+              if (child.style && child.style.color) child.style.color = '';
+              if (child.tagName === 'FONT' && child.hasAttribute('color')) child.removeAttribute('color');
+            });
+          } else if (command === 'bold' || command === 'italic' || command === 'underline') {
+            if (isPlaceholderText(textEl)) {
+              if (command === 'bold') {
+                textEl.style.fontWeight = (textEl.style.fontWeight === 'bold' || textEl.style.fontWeight === '700') ? 'normal' : 'bold';
+              } else if (command === 'italic') {
+                textEl.style.fontStyle = (textEl.style.fontStyle === 'italic') ? 'normal' : 'italic';
+              } else if (command === 'underline') {
+                textEl.style.textDecoration = (textEl.style.textDecoration === 'underline') ? 'none' : 'underline';
+              }
+            } else {
+              const wasEditing = textEl.classList.contains('editing');
+              isProgrammaticFormat = true;
+              textEl.style.fontWeight = '';
+              textEl.style.fontStyle = '';
+              textEl.style.textDecoration = '';
+
+              textEl.contentEditable = true;
+              textEl.focus();
+              const fullRange = document.createRange();
+              fullRange.selectNodeContents(textEl);
+              sel.removeAllRanges();
+              sel.addRange(fullRange);
+              document.execCommand(command, false, value);
+              sel.removeAllRanges();
+
+              if (!wasEditing) {
+                textEl.blur();
+                textEl.contentEditable = false;
+                textEl.classList.remove('editing');
+                const wrap = textEl.closest('.block-text-wrap');
+                if (wrap) wrap.classList.remove('editing-wrap');
+              }
+              isProgrammaticFormat = false;
+            }
+          }
+        });
       }
-      
-      if (value !== null && document.getElementById('inline-color')) document.getElementById('inline-color').value = value;
+
+      if (value !== null && document.getElementById('inline-color')) {
+        document.getElementById('inline-color').value = rgbToHex(value);
+      }
       saveState();
     }
 
@@ -2366,8 +2547,16 @@
               } 
           } else if (item.type === 'text') { 
               let tEl = newBlock.querySelector('.block-text'); 
+              let wrap = newBlock.querySelector('.block-text-wrap');
               tEl.innerHTML = item.html; 
-              if (item.css) tEl.style.cssText = item.css; 
+              if (item.css) {
+                  tEl.style.cssText = item.css;
+                  let vJustify = tEl.style.justifyContent || 'flex-start';
+                  tEl.style.display = 'block';
+                  tEl.style.flexDirection = '';
+                  tEl.style.justifyContent = vJustify;
+                  if (wrap) wrap.style.justifyContent = vJustify;
+              }
           }
           addToSelection(newBlock); 
         }); 
@@ -2570,16 +2759,74 @@
           block.appendChild(content); 
       } else if (type === 'text') { 
           if (!restoreData) block.style.height = '100px'; 
-          const content = document.createElement('div'); content.className = 'block-text'; content.style.backgroundColor = '#fcfcfc'; 
+          const wrap = document.createElement('div');
+          wrap.className = 'block-text-wrap';
+          const content = document.createElement('div'); 
+          content.className = 'block-text'; 
+
           if (restoreData) { 
-              content.style.cssText = restoreData.css; content.style.backgroundColor = '#fcfcfc'; if(!content.style.color) content.style.color = '#000000'; content.innerHTML = restoreData.html; 
+              content.style.cssText = restoreData.css; 
+              let vJustify = content.style.justifyContent || 'flex-start';
+              content.style.display = 'block';
+              content.style.flexDirection = '';
+              content.style.justifyContent = vJustify;
+              wrap.style.justifyContent = vJustify;
+              if(!content.style.color) content.style.color = '#000000'; 
+              content.innerHTML = restoreData.html; 
           } else { 
-              content.style.fontFamily = 'Arial, sans-serif'; content.style.fontSize = '14px'; content.style.lineHeight = '20px'; content.style.color = '#000000'; content.style.textAlign = 'left'; content.style.display = 'flex'; content.style.flexDirection = 'column'; content.style.justifyContent = 'flex-start'; content.style.paddingTop = '10px'; content.style.paddingBottom = '10px'; content.style.paddingLeft = '15px'; content.style.paddingRight = '15px'; content.innerHTML = '<div style="text-align:center;"><span class="ms-icon" style="font-size:32px; opacity:0.25;">title</span></div>'; 
+              content.style.fontFamily = 'Arial, sans-serif'; 
+              content.style.fontSize = '14px'; 
+              content.style.lineHeight = '20px'; 
+              content.style.color = '#000000'; 
+              content.style.textAlign = 'left'; 
+              content.style.display = 'block'; 
+              content.style.justifyContent = 'flex-start'; 
+              wrap.style.justifyContent = 'flex-start';
+              content.style.paddingTop = '10px'; 
+              content.style.paddingBottom = '10px'; 
+              content.style.paddingLeft = '15px'; 
+              content.style.paddingRight = '15px'; 
+              content.innerHTML = '<div style="text-align:center;"><span class="ms-icon" style="font-size:32px; opacity:0.25;">title</span></div>'; 
           } 
-          block.addEventListener('dblclick', function(e) { if (selectedBlocks.size === 1) { content.contentEditable = true; content.classList.add('editing'); if (content.innerHTML.includes('icon-text.png') || content.innerHTML.includes('ms-icon')) content.innerHTML = ''; content.focus(); } }); 
-          content.addEventListener('blur', function() { content.contentEditable = false; content.classList.remove('editing'); if (content.innerHTML.trim() === '' || content.innerHTML === '<br>') { content.innerHTML = '<div style="text-align:center;"><span class="ms-icon" style="font-size:32px; opacity:0.25;">title</span></div>'; } saveState(); }); 
-          content.addEventListener('paste', function(e) { e.preventDefault(); let text = (e.clipboardData || window.clipboardData).getData('text/plain'); document.execCommand('insertText', false, text); saveState(); }); 
-          block.appendChild(content); 
+
+          block.addEventListener('dblclick', function(e) { 
+              if (selectedBlocks.size === 1) { 
+                  content.contentEditable = true; 
+                  content.classList.add('editing'); 
+                  wrap.classList.add('editing-wrap');
+                  if (content.innerHTML.includes('icon-text.png') || content.innerHTML.includes('ms-icon')) {
+                      content.innerHTML = ''; 
+                  }
+                  content.focus(); 
+              } 
+          }); 
+
+          content.addEventListener('blur', function(e) { 
+              if (isProgrammaticFormat) return;
+              if (isUsingColorPicker || (e.relatedTarget && e.relatedTarget.id === 'inline-color')) {
+                  return;
+              }
+              content.contentEditable = false; 
+              content.classList.remove('editing'); 
+              wrap.classList.remove('editing-wrap');
+              savedRange = null;
+              lockedSelectionRange = null;
+              lockedSelectionTextEl = null;
+              if (content.innerHTML.trim() === '' || content.innerHTML === '<br>') { 
+                  content.innerHTML = '<div style="text-align:center;"><span class="ms-icon" style="font-size:32px; opacity:0.25;">title</span></div>'; 
+              } 
+              saveState(); 
+          }); 
+
+          content.addEventListener('paste', function(e) { 
+              e.preventDefault(); 
+              let text = (e.clipboardData || window.clipboardData).getData('text/plain'); 
+              document.execCommand('insertText', false, text); 
+              saveState(); 
+          }); 
+
+          wrap.appendChild(content);
+          block.appendChild(wrap); 
       } else if (type === 'gif') { 
           if (!restoreData) block.style.height = '150px'; 
           const content = document.createElement('div'); content.className = 'block-content bg-gif'; 
@@ -2656,6 +2903,7 @@
       // ARRASTRE LIBRE CON UMBRAL DE 5PX (PERMITE CLIC Y DOBLE CLIC LIMPIOS) + APERTURA EN INTERSECCIÓN
       block.addEventListener('mousedown', function(e) { 
         if (isColEditMode) return;
+        isUsingColorPicker = false;
         const textEdit = block.querySelector('.block-text'); if (textEdit && textEdit.classList.contains('editing')) return; 
         if (textEdit && !textEdit.classList.contains('editing')) { e.preventDefault(); } 
         if (e.target !== deleteBtn && !e.target.classList.contains('resize-handle')) { 
@@ -2936,8 +3184,10 @@
 
         const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${b.w}" height="${b.h}">
           <foreignObject width="100%" height="100%">
-            <div xmlns="http://www.w3.org/1999/xhtml" style="width:${b.w}px; height:${b.h}px; background-color:#fcfcfc; display:flex; flex-direction:column; justify-content:${justify}; padding:${padTop}px ${padSides}px 10px ${padSides}px; box-sizing:border-box; font-family:Arial, Helvetica, sans-serif; font-size:${b.fsVal}px; line-height:${b.lhVal}px; color:${b.colorVal}; text-align:${b.textAlign}; word-break:break-word; overflow:hidden; margin:0;">
-              ${xhtmlContent}
+            <div xmlns="http://www.w3.org/1999/xhtml" style="width:${b.w}px; height:${b.h}px; background-color:#fcfcfc; display:flex; flex-direction:column; justify-content:${justify}; box-sizing:border-box; overflow:hidden; margin:0;">
+              <div style="display:block; width:100%; padding:${padTop}px ${padSides}px 10px ${padSides}px; box-sizing:border-box; font-family:Arial, Helvetica, sans-serif; font-size:${b.fsVal}px; line-height:${b.lhVal}px; color:${b.colorVal}; text-align:${b.textAlign}; word-break:break-word;">
+                ${xhtmlContent}
+              </div>
             </div>
           </foreignObject>
         </svg>`;
@@ -2954,7 +3204,7 @@
       }
     }
 
-  function sliceMasterCanvas(masterCanvas, scale, x, y, w, h) {
+    function sliceMasterCanvas(masterCanvas, scale, x, y, w, h) {
       const sliceCvs = document.createElement('canvas');
       sliceCvs.width = Math.max(1, Math.round(w * scale));
       sliceCvs.height = Math.max(1, Math.round(h * scale));
@@ -3001,19 +3251,6 @@
             colorVal = rgbToHex(tEl.style.color || compStyle.color || '#000000'); 
             textAlign = tEl.style.textAlign || compStyle.textAlign || 'left';
             let safeFontFamily = ffVal.replace(/"/g, "'");
-
-            htmlContent = htmlContent.replace(/style="([^"]*)"/g, function(match, styleRules) {
-                let cleanedRules = styleRules
-                    .replace(/font-family\s*:[^;]+;?/gi, '')
-                    .replace(/font-size\s*:[^;]+;?/gi, '')
-                    .replace(/line-height\s*:[^;]+;?/gi, '')
-                    .replace(/margin[^:]*:[^;]+;?/gi, '')
-                    .replace(/padding[^:]*:[^;]+;?/gi, '');
-                return cleanedRules.trim() === '' ? '' : `style="${cleanedRules}"`;
-            });
-            htmlContent = htmlContent.replace(/<font[^>]*>/gi, '').replace(/<\/font>/gi, '');
-            htmlContent = htmlContent.replace(/class="[^"]*"/gi, '');
-            htmlContent = htmlContent.replace(/<br\s*\/?>\s*$/i, '');
 
             let tempDiv = document.createElement('div'); 
             tempDiv.innerHTML = htmlContent;
@@ -3262,7 +3499,7 @@
 
                 if (cleanHref) {
                    contentHtml = `<a href="${cleanHref}" target="_blank" style="text-decoration:none; color:${color}; display:block;">${contentHtml}</a>`;
-                   sliceHref = ''; // Listo
+                   sliceHref = '';
                 }
 
                 innerTag = `<table width="100%" height="${targetH}" border="0" cellpadding="0" cellspacing="0" style="width:100%; max-width:${pxW}px; height:${targetH}px; table-layout:fixed; border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
