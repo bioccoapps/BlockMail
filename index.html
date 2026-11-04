@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>DashPro Editor</title>
+  <title>BlockMail Editor</title>
   <link rel="icon" type="image/x-icon" href="app-logo.ico">
   <!-- GOOGLE FONTS & MATERIAL SYMBOLS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -140,7 +140,7 @@
     #newsletter-canvas { 
       width: 850px; margin: 0 auto; flex-shrink: 0; min-height: 800px; 
       background-color: #d1d5db; box-shadow: 0 8px 28px rgba(0,0,0,0.35); 
-      position: relative; transition: transform 0.3s ease; transform-origin: top center; 
+      position: relative; transition: transform 0.15s ease-out; transform-origin: top center; 
     }
 
     #canvas-guides {
@@ -156,7 +156,7 @@
     #insertion-guide {
       position: absolute;
       left: 0;
-      width: 850px;
+      width: 100%;
       height: 3px;
       background: var(--md-primary);
       box-shadow: 0 0 10px var(--md-primary), 0 0 4px #ffffff;
@@ -319,8 +319,6 @@
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     }
-    #multi-select-msg { display: none; color: var(--md-primary); font-size: 12.5px; text-align: center; margin-bottom: 10px; background: var(--md-primary-container); padding: 10px; border-radius: 6px; font-weight: 500; }
-    #single-properties { display: block; }
     
     .align-group { display: flex; gap: 6px; margin-bottom: 14px; }
     .align-btn { flex: 1; text-align: center; padding: 7px 0; margin-bottom: 0; font-size: 15px; font-weight: 600; background-color: var(--md-surface); border-color: var(--md-border); justify-content: center; gap: 0; }
@@ -599,7 +597,8 @@
     .grid-btn:hover, .grid-btn.active { border-color: var(--md-primary); background: var(--md-primary-container); color: var(--md-text); transform: translateY(-2px); }
 
     .settings-section { text-align: left; background: var(--md-surface-2); border: 1px solid var(--md-border); border-radius: 10px; padding: 16px; margin-bottom: 18px; }
-    .settings-row { display: flex; justify-content: space-between; align-items: center; }
+    .settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;}
+    .settings-row:last-child { margin-bottom: 0; }
     .settings-row label { font-size: 13.5px; color: var(--md-text); font-weight: 500; display: flex; align-items: center; gap: 8px; }
     .settings-input { width: 90px; background: var(--md-surface); border: 1px solid var(--md-border); border-radius: 6px; color: var(--md-text); padding: 7px 10px; text-align: right; font-size: 13.5px; font-family: inherit; outline: none; }
     .settings-input:focus { border-color: var(--md-primary); }
@@ -663,8 +662,8 @@
   <!-- MODAL DE AJUSTES DE GRILLA Y TEMA DE INTERFAZ -->
   <div id="grid-settings-modal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
-      <div class="modal-title"><span class="ms-icon" style="color:var(--md-primary);">tune</span> Ajustes de DashPro</div>
-      <div class="modal-text" style="margin-bottom: 16px;">Personalizá el tema visual de la app, la cantidad de columnas y el espacio uniforme entre ellas.</div>
+      <div class="modal-title"><span class="ms-icon" style="color:var(--md-primary);">tune</span> Ajustes de BlockMail</div>
+      <div class="modal-text" style="margin-bottom: 16px;">Personalizá el tema visual, el ancho del mail, cantidad de columnas y espacios.</div>
       
       <!-- SELECTOR DE TEMA: CLARO, GRIS, OSCURO -->
       <div style="text-align:left; font-size:12px; font-weight:700; color:var(--md-text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
@@ -709,6 +708,10 @@
 
       <div class="settings-section">
         <div class="settings-row">
+          <label><span class="ms-icon" style="color:var(--md-primary);">desktop_windows</span> Ancho de Mesa de Trabajo (px)</label>
+          <input type="number" id="canvas-width-input" class="settings-input" value="850" min="400" max="1200">
+        </div>
+        <div class="settings-row">
           <label><span class="ms-icon" style="color:var(--md-primary);">space_bar</span> Espacio entre columnas (px)</label>
           <input type="number" id="uniform-gap-input" class="settings-input" value="20" min="0" max="200">
         </div>
@@ -722,13 +725,13 @@
   <!-- PANTALLA DE BIENVENIDA -->
   <div id="welcome-screen">
     <div class="ws-sidebar">
-      <h1><img src="app-logo.ico" style="width: 32px; height: 32px; object-fit: contain;" alt="" onerror="this.style.display='none'"> DashPro <small id="ws-app-version" style="font-size: 12px; color: var(--md-text-muted); font-weight: normal;"></small></h1>
+      <h1><img src="app-logo.ico" style="width: 32px; height: 32px; object-fit: contain;" alt="" onerror="this.style.display='none'"> BlockMail <small id="ws-app-version" style="font-size: 12px; color: var(--md-text-muted); font-weight: normal;"></small></h1>
       <button class="ws-btn-primary" onclick="showNewProjectModal()"><span class="ms-icon">add_box</span> Archivo nuevo</button>
       <button class="ws-btn-secondary" onclick="triggerLoadProject()"><span class="ms-icon">folder_open</span> Abrir proyecto</button>
       <button class="ws-btn-secondary" style="margin-top:auto;" onclick="openGridSettingsModal()"><span class="ms-icon">tune</span> Tema y Ajustes</button>
     </div>
     <div class="ws-main">
-      <div class="ws-title">Te damos la bienvenida a DashPro</div>
+      <div class="ws-title">Te damos la bienvenida a BlockMail</div>
       <div class="ws-recents-title">Recientes (Últimos 10)</div>
       <div class="recent-grid" id="recent-projects-grid"></div>
     </div>
@@ -750,7 +753,7 @@
   <div id="topbar">
     <div style="display:flex; align-items:center; gap: 12px;">
       <span style="font-weight:700; color:var(--md-text); font-size:15.5px; display:flex; align-items:center; gap:8px;">
-        <img src="app-logo.ico" style="width:24px; height:24px; object-fit:contain;" alt="" onerror="this.style.display='none'"> DashPro
+        <img src="app-logo.ico" style="width:24px; height:24px; object-fit:contain;" alt="" onerror="this.style.display='none'"> BlockMail
       </span>
       <span id="app-version" style="font-size:11.5px; color:var(--md-primary); font-weight:600; margin-right:6px;"></span>
       <label style="font-size: 12.5px; color: var(--md-text-muted); font-weight: 600;">Asunto:</label>
@@ -758,6 +761,13 @@
     </div>
 
     <div style="display:flex; gap:8px; align-items: center;">
+      <!-- CONTROLES DE ZOOM -->
+      <div style="display:flex; align-items:center; gap:4px; margin-right:12px; background:var(--md-surface-2); padding:4px 8px; border-radius:6px; border:1px solid var(--md-border);">
+        <button class="tool-btn top-btn" style="margin:0; padding:2px 6px;" onclick="changeZoom(-0.1)"><span class="ms-icon" style="font-size:16px;">remove</span></button>
+        <span id="zoom-label" style="font-size:12px; font-weight:600; width:45px; text-align:center; color:var(--md-text);">100%</span>
+        <button class="tool-btn top-btn" style="margin:0; padding:2px 6px;" onclick="changeZoom(0.1)"><span class="ms-icon" style="font-size:16px;">add</span></button>
+      </div>
+
       <div style="display:flex; gap:6px; margin-right: 6px; border-right: 1px solid var(--md-border); padding-right: 12px;">
         <button class="tool-btn top-btn" id="btn-edit-cols" title="Habilitar nodos para editar el ancho de las columnas en la mesa de trabajo" onclick="toggleColumnEditMode()">
           <span class="ms-icon">view_column</span> Editar Columnas
@@ -851,7 +861,7 @@
         </div>
 
         <div style="font-size:11px; color:var(--md-text-muted); line-height:1.4; margin: 10px 0;">
-          💡 Hacé clic en una columna del lienzo o arrastrá los nodos azules para cambiar su ancho. Las demás columnas se ajustan solas a 850px.
+          💡 Clic en una columna o arrastrá los nodos para cambiar su ancho. Se ajustarán al total de la mesa.
         </div>
 
         <button class="tool-btn" style="width:100%; justify-content:center; margin-top:8px;" onclick="equalizeActiveColumns()">
@@ -867,16 +877,34 @@
         <h2 style="margin-bottom: 12px; color: var(--md-primary); display:flex; align-items:center; gap:6px;">
           <span class="ms-icon">sliders</span> Propiedades
         </h2>
-        <div id="multi-select-msg">Varios bloques seleccionados.<br><small>Arrastrá desde las esquinas para cambiar el tamaño en conjunto.</small></div>
         
-        <div id="single-properties">
-          <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:6px;">Alinear caja con el lienzo</label>
-          <div class="align-group">
+        <!-- PROPIEDADES GENERALES Y ALINEACIÓN (SIRVE PARA 1 O MÚLTIPLES) -->
+        <div id="general-align-props" style="margin-bottom: 15px;">
+          <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:6px;">Alinear con:</label>
+          <select id="align-target" class="media-input" style="margin-bottom:8px; margin-top:0;">
+            <option value="canvas">Lienzo (Mesa de trabajo)</option>
+            <option value="selection">Objeto Principal (Selección)</option>
+          </select>
+          <div class="align-group" style="margin-bottom: 8px;">
             <button class="tool-btn align-btn" onclick="alignBlock('left')" title="Izquierda"><span class="ms-icon">align_horizontal_left</span></button>
             <button class="tool-btn align-btn" onclick="alignBlock('center')" title="Centro"><span class="ms-icon">align_horizontal_center</span></button>
             <button class="tool-btn align-btn" onclick="alignBlock('right')" title="Derecha"><span class="ms-icon">align_horizontal_right</span></button>
           </div>
+          <div class="align-group" id="multi-v-align" style="margin-bottom: 14px;">
+            <button class="tool-btn align-btn" onclick="alignBlock('top')" title="Arriba"><span class="ms-icon">align_vertical_top</span></button>
+            <button class="tool-btn align-btn" onclick="alignBlock('middle')" title="Medio"><span class="ms-icon">align_vertical_center</span></button>
+            <button class="tool-btn align-btn" onclick="alignBlock('bottom')" title="Abajo"><span class="ms-icon">align_vertical_bottom</span></button>
+          </div>
           
+          <button id="btn-group" class="tool-btn" style="width:100%; justify-content:center; display:none; margin-bottom:12px; background:var(--md-surface-3);" onclick="groupSelected()"><span class="ms-icon">group</span> Agrupar</button>
+          <button id="btn-ungroup" class="tool-btn" style="width:100%; justify-content:center; display:none; margin-bottom:12px; background:var(--md-surface-3); color:#e74c3c; border-color:rgba(231,76,60,0.4);" onclick="ungroupSelected()"><span class="ms-icon">group_remove</span> Desagrupar</button>
+        </div>
+
+        <div id="multi-select-msg" style="display:none; color: var(--md-primary); font-size: 12.5px; text-align: center; margin-bottom: 10px; background: var(--md-primary-container); padding: 10px; border-radius: 6px; font-weight: 500;">
+          Varios bloques seleccionados.<br><small>Arrastrá desde las esquinas para cambiar el tamaño en conjunto.</small>
+        </div>
+
+        <div id="single-properties">
           <div class="prop-row"><label>Pos. X</label>
             <div class="num-wrap"><input type="number" id="prop-x" oninput="updateSelectedBlock('x')">
               <div class="num-arrows"><div class="num-arr up" onclick="adjustNum('prop-x', 1)">▲</div><div class="num-arr" onclick="adjustNum('prop-x', -1)">▼</div></div>
@@ -950,10 +978,10 @@
             
             <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:5px; margin-top:15px;">Formato y Color</label>
             <div class="align-group" style="margin-bottom: 8px;">
-              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('bold')" title="Negrita (Bloque o Selección)"><b>B</b></button>
-              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('italic')" title="Cursiva (Bloque o Selección)"><i>I</i></button>
-              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('underline')" title="Subrayado (Bloque o Selección)"><u>U</u></button>
-              <input type="color" id="inline-color" title="Color (Bloque o Selección)" style="width:25%; height:34px; margin-top:0; background:none; border:1px solid var(--md-border); border-radius:6px; cursor:pointer;" onmousedown="preserveSelectionForColorPicker()" oninput="inlineFormat('foreColor', this.value)" onchange="inlineFormat('foreColor', this.value);">
+              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('bold')" title="Negrita"><b>B</b></button>
+              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('italic')" title="Cursiva"><i>I</i></button>
+              <button class="tool-btn align-btn" onmousedown="event.preventDefault(); inlineFormat('underline')" title="Subrayado"><u>U</u></button>
+              <input type="color" id="inline-color" title="Color" style="width:25%; height:34px; margin-top:0; background:none; border:1px solid var(--md-border); border-radius:6px; cursor:pointer;" onmousedown="preserveSelectionForColorPicker()" oninput="inlineFormat('foreColor', this.value)" onchange="inlineFormat('foreColor', this.value);">
             </div>
             
             <div id="palette-container" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; background: var(--md-surface); padding: 8px; border: 1px solid var(--md-border); border-radius:6px;"></div>
@@ -965,10 +993,9 @@
               <input type="file" id="ase-upload" accept=".ase" style="display:none;" onchange="loadASEFile(event)">
             </div>
             <div style="font-size:10px; color:var(--md-text-muted); text-align:center; margin-bottom:14px; font-style:italic;">(Clic derecho para eliminar un color)</div>
-
             <div id="ase-palettes-container"></div>
 
-            <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:5px;">Alineación Vertical</label>
+            <label style="font-size: 12px; color: var(--md-text-muted); display:block; margin-bottom:5px;">Alineación Vertical (Contenedor)</label>
             <div class="align-group" style="margin-bottom: 10px;">
               <button class="tool-btn align-btn" onclick="updateTextVAlign('flex-start')" title="Pegado Arriba"><span class="ms-icon">align_vertical_top</span></button>
               <button class="tool-btn align-btn" onclick="updateTextVAlign('center')" title="Centrado al medio"><span class="ms-icon">align_vertical_center</span></button>
@@ -989,7 +1016,7 @@
   </div>
 <script>
     // ==========================================
-    // NOTIFICACIONES Y MODALES "CON SALSA" (ADIÓS ALERT DE WINDOWS)
+    // NOTIFICACIONES Y MODALES "CON SALSA"
     // ==========================================
     function showSalsaToast(title, message, type = 'success') {
       const container = document.getElementById('salsa-toast-container');
@@ -1046,9 +1073,11 @@
     }
 
     // ==========================================
-    // GESTIÓN DE TEMAS (CLARO, GRIS, OSCURO)
+    // GESTIÓN DE TEMAS, ANCHO Y ZOOM
     // ==========================================
     let currentAppTheme = localStorage.getItem('bmail_theme') || 'dark';
+    let currentCanvasWidth = 850;
+    let currentZoom = 1;
 
     function setAppTheme(theme, silent = false) {
       if (!['light', 'gray', 'dark'].includes(theme)) theme = 'dark';
@@ -1067,9 +1096,14 @@
       }
     }
 
-    // ==========================================
-    // LÓGICA DE SISTEMA (ELECTRON E IPC)
-    // ==========================================
+    function changeZoom(delta) {
+      currentZoom = Math.max(0.3, Math.min(3, currentZoom + delta));
+      document.getElementById('newsletter-canvas').style.transform = `scale(${currentZoom})`;
+      document.getElementById('zoom-label').innerText = Math.round(currentZoom * 100) + '%';
+      if (typeof updateCanvasHeight === 'function') updateCanvasHeight();
+      if (typeof updateMultiSelectionBoundingBox === 'function') updateMultiSelectionBoundingBox();
+    }
+
     function safeJSONParse(key, fallback) {
       try {
         let item = localStorage.getItem(key);
@@ -1081,8 +1115,10 @@
       }
     }
 
+    // ==========================================
+    // LÓGICA DE SISTEMA (ELECTRON E IPC)
+    // ==========================================
     let fs, path, ipcRenderer;
-    
     try { 
       fs = require('fs'); 
       path = require('path'); 
@@ -1208,7 +1244,7 @@
     let isRestoring = false;
 
     // ==========================================
-    // GRILLA PERSONALIZABLE Y EDICIÓN EN MESA DE TRABAJO
+    // GRILLA Y EDICIÓN EN MESA DE TRABAJO VARIABLE
     // ==========================================
     let currentColumns = 1;
     let currentColWidths = [850];
@@ -1221,7 +1257,7 @@
     let selectedColIndex = 0;
 
     function getDefaultGrid(cols, customGap = 20) {
-      const totalWidth = 850;
+      const totalWidth = currentCanvasWidth;
       const gapVal = cols > 1 ? customGap : 0;
       const gapWidths = Array(Math.max(0, cols - 1)).fill(gapVal);
       const totalGaps = gapWidths.reduce((a, b) => a + b, 0);
@@ -1252,14 +1288,14 @@
           unsaved: false,
           columns: grid.columns,
           colWidths: grid.colWidths,
-          gapWidths: grid.gapWidths
+          gapWidths: grid.gapWidths,
+          canvasWidth: currentCanvasWidth
       };
       projects.push(newProj); 
       switchTab(projects.length - 1); 
       showSalsaToast("Plantilla creada", `Proyecto iniciado con grilla de ${cols} ${cols === 1 ? 'columna' : 'columnas'}.`, "info");
     }
 
-    // DIBUJA COLUMNAS BLANCAS, GUÍAS Y NODOS INTERACTIVOS EN EL LIENZO
     function drawGuides() {
       guidesContainer.innerHTML = '';
       gridGuides = [0];
@@ -1271,7 +1307,7 @@
       }
 
       if (selectedColIndex >= currentColumns) selectedColIndex = 0;
-      columnWidth = currentColWidths[0] || 850;
+      columnWidth = currentColWidths[0] || currentCanvasWidth;
       
       let currentX = 0;
       for (let i = 0; i < currentColWidths.length; i++) {
@@ -1321,7 +1357,7 @@
             currentX += currentGapWidths[i];
          }
       }
-      if (!gridGuides.includes(850)) gridGuides.push(850);
+      if (!gridGuides.includes(currentCanvasWidth)) gridGuides.push(currentCanvasWidth);
       gridGuides.sort((a, b) => a - b);
     }
 
@@ -1350,7 +1386,7 @@
       if (lbl) lbl.innerText = `Columna ${index + 1} seleccionada (de ${currentColumns})`;
       const wInput = document.getElementById('col-width-input');
       if (wInput) {
-        wInput.value = currentColWidths[index] || 850;
+        wInput.value = currentColWidths[index] || currentCanvasWidth;
         wInput.disabled = (currentColumns <= 1);
       }
       const gInput = document.getElementById('sidebar-gap-input');
@@ -1363,13 +1399,13 @@
 
     function setColumnWidthAndAutoAdjust(colIdx, newWidth) {
       if (currentColumns <= 1) {
-        currentColWidths = [850];
+        currentColWidths = [currentCanvasWidth];
         drawGuides();
         return;
       }
       const minW = 40;
       const totalGaps = currentGapWidths.reduce((a, b) => a + b, 0);
-      const availTotal = 850 - totalGaps;
+      const availTotal = currentCanvasWidth - totalGaps;
       const maxW = availTotal - (currentColumns - 1) * minW;
 
       let clampedW = Math.max(minW, Math.min(maxW, Math.round(newWidth)));
@@ -1402,7 +1438,7 @@
       const startX = e.clientX;
       const startW = currentColWidths[colIdx];
       function onMove(moveEvent) {
-        let dx = moveEvent.clientX - startX;
+        let dx = (moveEvent.clientX - startX) / currentZoom;
         setColumnWidthAndAutoAdjust(colIdx, startW + dx);
         const wInput = document.getElementById('col-width-input');
         if (wInput) wInput.value = currentColWidths[colIdx];
@@ -1452,7 +1488,7 @@
 
     function rebalanceColumnsForGap() {
       const totalGaps = currentGapWidths.reduce((a, b) => a + b, 0);
-      const avail = Math.max(currentColumns * 40, 850 - totalGaps);
+      const avail = Math.max(currentColumns * 40, currentCanvasWidth - totalGaps);
       const currentSumCols = currentColWidths.reduce((a, b) => a + b, 0) || 1;
       let newWidths = currentColWidths.map(w => Math.max(40, Math.floor((w / currentSumCols) * avail)));
       let diff = avail - newWidths.reduce((a, b) => a + b, 0);
@@ -1475,6 +1511,7 @@
       tempCols = currentColumns || 1;
       const currentGap = currentGapWidths.length > 0 ? currentGapWidths[0] : 20;
       document.getElementById('uniform-gap-input').value = currentGap;
+      document.getElementById('canvas-width-input').value = currentCanvasWidth;
       highlightSettingsColBtn();
       setAppTheme(currentAppTheme, true);
       document.getElementById('grid-settings-modal').style.display = 'flex';
@@ -1494,6 +1531,11 @@
 
     function applyGridSettings() {
       const uniformGap = Math.max(0, Math.min(200, parseInt(document.getElementById('uniform-gap-input').value) || 0));
+      const newWidth = Math.max(400, Math.min(1200, parseInt(document.getElementById('canvas-width-input').value) || 850));
+      currentCanvasWidth = newWidth;
+      
+      document.getElementById('newsletter-canvas').style.width = currentCanvasWidth + 'px';
+
       if (activeProjectIndex >= 0 && projects[activeProjectIndex]) {
         if (tempCols !== currentColumns) {
           currentColumns = tempCols;
@@ -1508,11 +1550,12 @@
         projects[activeProjectIndex].columns = currentColumns;
         projects[activeProjectIndex].colWidths = [...currentColWidths];
         projects[activeProjectIndex].gapWidths = [...currentGapWidths];
+        projects[activeProjectIndex].canvasWidth = currentCanvasWidth;
 
         if (isColEditMode) selectColumnForEdit(0);
         else drawGuides();
         markUnsaved();
-        showSalsaToast("Ajustes aplicados", `Grilla de ${currentColumns} col · espacio de ${uniformGap}px.`, "success");
+        showSalsaToast("Ajustes aplicados", `Ancho: ${newWidth}px · ${currentColumns} col · espacio ${uniformGap}px.`, "success");
       } else {
         currentColumns = tempCols;
       }
@@ -1566,6 +1609,7 @@
           projects[activeProjectIndex].columns = currentColumns;
           projects[activeProjectIndex].colWidths = [...currentColWidths];
           projects[activeProjectIndex].gapWidths = [...currentGapWidths];
+          projects[activeProjectIndex].canvasWidth = currentCanvasWidth;
       }
     }
 
@@ -1579,6 +1623,10 @@
       historyArr = [...p.historyArr];
       historyIndex = p.historyIndex;
       currentColumns = p.columns || 1;
+      currentCanvasWidth = p.canvasWidth || 850;
+      
+      document.getElementById('newsletter-canvas').style.width = currentCanvasWidth + 'px';
+
       const def = getDefaultGrid(currentColumns, 20);
       currentColWidths = p.colWidths || def.colWidths;
       currentGapWidths = p.gapWidths || def.gapWidths;
@@ -1596,8 +1644,8 @@
           });
       }
       
-      updateCanvasHeight(); 
-      updatePropertiesUI(); 
+      if (typeof updateCanvasHeight === 'function') updateCanvasHeight(); 
+      if (typeof updatePropertiesUI === 'function') updatePropertiesUI(); 
       isRestoring = false; 
       renderTabs();
     }
@@ -1609,8 +1657,11 @@
           showSalsaToast("Proyecto activo", "El archivo ya estaba abierto en esta pestaña.", "info");
           return;
       }
+      
+      currentCanvasWidth = data.canvasWidth || 850;
       const cols = data.columns || 1;
       const def = getDefaultGrid(cols, 20);
+      
       let loadedProj = {
           id: Date.now().toString(),
           name: typeof path !== 'undefined' ? path.basename(filePath, '.bmail') : filePath,
@@ -1622,7 +1673,8 @@
           unsaved: false,
           columns: cols,
           colWidths: data.colWidths || def.colWidths,
-          gapWidths: data.gapWidths || def.gapWidths
+          gapWidths: data.gapWidths || def.gapWidths,
+          canvasWidth: currentCanvasWidth
       };
       projects.push(loadedProj);
       switchTab(projects.length - 1);
@@ -1679,22 +1731,18 @@
     }
 
     // ==========================================
-    // GENERADOR DE MINIATURAS FIEL AL EDITOR (CON MÁSCARAS DE RECORTE)
+    // MINIATURAS, GUARDADO Y RECINTES
     // ==========================================
     function normalizeBlockForThumbnail(raw) {
-      let x = parseInt(raw.x) || 0;
-      let y = parseInt(raw.y) || 0;
-      let w = parseInt(raw.w) || 100;
-      let h = parseInt(raw.h) || 100;
+      let x = parseInt(raw.x) || 0; let y = parseInt(raw.y) || 0;
+      let w = parseInt(raw.w) || 100; let h = parseInt(raw.h) || 100;
       let html = raw.html || '';
       if (html.includes('icon-text.png') || html.includes('ms-icon') || html === 'Doble clic acá para editar el texto.') {
         html = '';
       }
 
       let fsVal = 14, lhVal = 20, ptVal = 10, pxVal = 15;
-      let ffVal = 'Arial, Helvetica, sans-serif';
-      let colorVal = '#000000';
-      let textAlign = 'left';
+      let ffVal = 'Arial, Helvetica, sans-serif', colorVal = '#000000', textAlign = 'left';
 
       if (raw.css) {
         const temp = document.createElement('div');
@@ -1707,15 +1755,7 @@
         if (temp.style.textAlign) textAlign = temp.style.textAlign;
       }
 
-      return {
-        type: raw.type,
-        x, y, w, h,
-        src: raw.src || '',
-        href: raw.href || '',
-        html,
-        css: raw.css || '',
-        fsVal, lhVal, ptVal, pxVal, ffVal, colorVal, textAlign
-      };
+      return { type: raw.type, x, y, w, h, src: raw.src || '', href: raw.href || '', html, css: raw.css || '', fsVal, lhVal, ptVal, pxVal, ffVal, colorVal, textAlign };
     }
 
     async function generateThumbnailFromProjectData(projectData) {
@@ -1728,7 +1768,7 @@
         const captureH = Math.max(620, Math.min(maxBottom + 40, 1100));
 
         const cvs = document.createElement('canvas');
-        cvs.width = Math.round(850 * thumbScale);
+        cvs.width = Math.round((projectData.canvasWidth || 850) * thumbScale);
         cvs.height = Math.round(captureH * thumbScale);
         const ctx = cvs.getContext('2d');
 
@@ -1751,47 +1791,52 @@
 
         for (const b of blocks) {
           if (b.y > captureH) continue;
-          const bx = b.x * thumbScale;
-          const by = b.y * thumbScale;
-          const bw = b.w * thumbScale;
-          const bh = b.h * thumbScale;
+          const bx = b.x * thumbScale, by = b.y * thumbScale, bw = b.w * thumbScale, bh = b.h * thumbScale;
 
           if (b.type === 'gif' && b.src) {
             ctx.save();
-            ctx.beginPath();
-            ctx.rect(bx, by, bw, bh);
-            ctx.clip();
-            ctx.fillStyle = '#fcfcfc';
-            ctx.fillRect(bx, by, bw, bh);
-            const gImg = await loadImageElement(b.src);
-            if (gImg) {
-              const iW = gImg.naturalWidth || gImg.width;
-              const iH = gImg.naturalHeight || gImg.height;
-              const iRatio = iW / iH;
-              const bRatio = bw / bh;
-              let dW, dH, oX, oY;
-              if (iRatio > bRatio) {
-                dW = bw; dH = bw / iRatio; oX = 0; oY = (bh - dH) / 2;
-              } else {
-                dH = bh; dW = bh * iRatio; oX = (bw - dW) / 2; oY = 0;
-              }
-              ctx.drawImage(gImg, bx + oX, by + oY, dW, dH);
+            ctx.beginPath(); ctx.rect(bx, by, bw, bh); ctx.clip();
+            ctx.fillStyle = '#fcfcfc'; ctx.fillRect(bx, by, bw, bh);
+            if (typeof loadImageElement === 'function') {
+                const gImg = await loadImageElement(b.src);
+                if (gImg) {
+                  const iW = gImg.naturalWidth || gImg.width, iH = gImg.naturalHeight || gImg.height;
+                  const iRatio = iW / iH, bRatio = bw / bh;
+                  let dW, dH, oX, oY;
+                  if (iRatio > bRatio) { dW = bw; dH = bw / iRatio; oX = 0; oY = (bh - dH) / 2; } 
+                  else { dH = bh; dW = bh * iRatio; oX = (bw - dW) / 2; oY = 0; }
+                  ctx.drawImage(gImg, bx + oX, by + oY, dW, dH);
+                }
             }
             ctx.restore();
           } else {
-            await drawBlockOnMasterCtx(ctx, b, thumbScale);
+            if (typeof drawBlockOnMasterCtx === 'function') await drawBlockOnMasterCtx(ctx, b, thumbScale);
           }
 
           ctx.strokeStyle = 'rgba(176, 181, 188, 0.45)';
           ctx.lineWidth = 1;
           ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
         }
-
         return cvs.toDataURL('image/png');
       } catch (err) {
-        console.warn("Error creando miniatura:", err);
         return '';
       }
+    }
+
+    function serializeBlocksFromDOM() {
+      return Array.from(document.querySelectorAll('.block')).map(b => ({
+        type: b.dataset.type, 
+        x: b.style.left, 
+        y: b.style.top, 
+        w: b.style.width, 
+        h: b.style.height,
+        src: b.dataset.src || '', 
+        href: b.dataset.href || '',
+        html: b.querySelector('.block-text') ? b.querySelector('.block-text').innerHTML : '',
+        css: b.querySelector('.block-text') ? b.querySelector('.block-text').style.cssText : '', 
+        selected: b.classList.contains('selected'),
+        groupId: b.dataset.groupId || ''
+      }));
     }
 
     function takeScreenshot(projectId, callback) {
@@ -1799,6 +1844,7 @@
         columns: currentColumns,
         colWidths: [...currentColWidths],
         gapWidths: [...currentGapWidths],
+        canvasWidth: currentCanvasWidth,
         blocks: serializeBlocksFromDOM()
       };
       generateThumbnailFromProjectData(currentData).then(base64 => callback(base64));
@@ -1809,7 +1855,6 @@
       let grid = document.getElementById('recent-projects-grid');
       if(!grid) return; 
       grid.innerHTML = '';
-      
       let updatedAny = false;
 
       for (let i = 0; i < recents.length; i++) {
@@ -1872,25 +1917,7 @@
          };
          grid.appendChild(card);
       }
-
-      if (updatedAny) {
-         localStorage.setItem('bmail_recents', JSON.stringify(recents));
-      }
-    }
-
-    function serializeBlocksFromDOM() {
-      return Array.from(document.querySelectorAll('.block')).map(b => ({
-        type: b.dataset.type, 
-        x: b.style.left, 
-        y: b.style.top, 
-        w: b.style.width, 
-        h: b.style.height,
-        src: b.dataset.src || '', 
-        href: b.dataset.href || '',
-        html: b.querySelector('.block-text') ? b.querySelector('.block-text').innerHTML : '',
-        css: b.querySelector('.block-text') ? b.querySelector('.block-text').style.cssText : '', 
-        selected: b.classList.contains('selected')
-      }));
+      if (updatedAny) localStorage.setItem('bmail_recents', JSON.stringify(recents));
     }
 
     async function saveActiveProject(forceSaveAs) {
@@ -1908,12 +1935,15 @@
       p.columns = currentColumns;
       p.colWidths = [...currentColWidths];
       p.gapWidths = [...currentGapWidths];
+      p.canvasWidth = currentCanvasWidth;
+
       const projectData = { 
         subject: p.subject, 
         blocks: p.blocks, 
         columns: p.columns,
         colWidths: p.colWidths,
-        gapWidths: p.gapWidths
+        gapWidths: p.gapWidths,
+        canvasWidth: p.canvasWidth
       };
       
       if (!ipcRenderer) return false; 
@@ -1924,7 +1954,7 @@
           const result = await ipcRenderer.invoke('show-save-dialog', { 
               title: 'Guardar Proyecto', 
               defaultPath: defaultName, 
-              filters: [{ name: 'Proyecto DashPro', extensions: ['bmail'] }] 
+              filters: [{ name: 'Proyecto BlockMail', extensions: ['bmail'] }] 
           });
           if (result.canceled || !result.filePath) return false;
           finalPath = result.filePath;
@@ -1950,13 +1980,9 @@
           }
           
           recents.unshift({ 
-              id: p.id,
-              name: fileName,
-              filePath: finalPath,
-              data: projectData, 
-              date: new Date().toLocaleDateString(),
-              thumbPath: thumbPath,
-              thumbVersion: 3
+              id: p.id, name: fileName, filePath: finalPath,
+              data: projectData, date: new Date().toLocaleDateString(),
+              thumbPath: thumbPath, thumbVersion: 3
           });
           
           if(recents.length > 10) recents = recents.slice(0, 10);
@@ -1981,7 +2007,7 @@
     async function triggerLoadProject() { 
       if (!ipcRenderer) { document.getElementById('project-upload').click(); return; }
       const result = await ipcRenderer.invoke('show-open-dialog', { 
-          filters: [{ name: 'Proyecto DashPro', extensions: ['bmail'] }] 
+          filters: [{ name: 'Proyecto BlockMail', extensions: ['bmail'] }] 
       });
       if (result.canceled || result.filePaths.length === 0) return;
       try { 
@@ -1989,7 +2015,7 @@
       } catch (err) { showSalsaToast("Archivo inválido", "No se pudo abrir el proyecto seleccionado.", "error"); }
     }
 // ==========================================
-    // CORE EDITOR (SELECCIÓN Y PROPIEDADES)
+    // CORE EDITOR (SELECCIÓN, GRUPOS Y PROPIEDADES)
     // ==========================================
     const selectionBox = document.getElementById('selection-box'); 
     const multiSelectionBox = document.getElementById('multi-selection-box'); 
@@ -2045,6 +2071,27 @@
       document.body.classList.add('multi-selection-active'); 
     }
 
+    function groupSelected() {
+      if (selectedBlocks.size < 2) return;
+      const groupId = 'grp_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      selectedBlocks.forEach(block => {
+          block.dataset.groupId = groupId;
+      });
+      saveState();
+      updatePropertiesUI();
+      showSalsaToast("Objetos Agrupados", "Los bloques ahora se seleccionarán y moverán en conjunto.", "success");
+    }
+
+    function ungroupSelected() {
+      if (selectedBlocks.size === 0) return;
+      selectedBlocks.forEach(block => {
+          delete block.dataset.groupId;
+      });
+      saveState();
+      updatePropertiesUI();
+      showSalsaToast("Objetos Desagrupados", "Los bloques volvieron a ser independientes.", "info");
+    }
+
     function clearSelection() { 
         isUsingColorPicker = false;
         savedRange = null;
@@ -2064,62 +2111,115 @@
 
     function addToSelection(block) { 
         if (isColEditMode) toggleColumnEditMode();
-        selectedBlocks.add(block); block.classList.add('selected'); 
-        updatePropertiesUI(); updateMultiSelectionBoundingBox(); 
+        
+        let groupId = block.dataset.groupId;
+        if (groupId) {
+            document.querySelectorAll(`.block[data-group-id="${groupId}"]`).forEach(b => {
+                selectedBlocks.add(b);
+                b.classList.add('selected');
+            });
+        } else {
+            selectedBlocks.add(block); 
+            block.classList.add('selected'); 
+        }
+        
+        updatePropertiesUI(); 
+        updateMultiSelectionBoundingBox(); 
     }
 
     function removeFromSelection(block) { 
-        selectedBlocks.delete(block); block.classList.remove('selected'); 
-        const textContent = block.querySelector('.block-text'); 
-        const textWrap = block.querySelector('.block-text-wrap');
-        if (textContent) { textContent.classList.remove('editing'); textContent.contentEditable = false; } 
-        if (textWrap) { textWrap.classList.remove('editing-wrap'); }
-        updatePropertiesUI(); updateMultiSelectionBoundingBox(); 
+        let groupId = block.dataset.groupId;
+        if (groupId) {
+            document.querySelectorAll(`.block[data-group-id="${groupId}"]`).forEach(b => {
+                selectedBlocks.delete(b);
+                b.classList.remove('selected');
+                const textContent = b.querySelector('.block-text'); 
+                const textWrap = b.querySelector('.block-text-wrap');
+                if (textContent) { textContent.classList.remove('editing'); textContent.contentEditable = false; } 
+                if (textWrap) { textWrap.classList.remove('editing-wrap'); }
+            });
+        } else {
+            selectedBlocks.delete(block); 
+            block.classList.remove('selected'); 
+            const textContent = block.querySelector('.block-text'); 
+            const textWrap = block.querySelector('.block-text-wrap');
+            if (textContent) { textContent.classList.remove('editing'); textContent.contentEditable = false; } 
+            if (textWrap) { textWrap.classList.remove('editing-wrap'); }
+        }
+        
+        updatePropertiesUI(); 
+        updateMultiSelectionBoundingBox(); 
     }
 
     function updatePropertiesUI() { 
       document.body.classList.toggle('single-selection', selectedBlocks.size === 1);
+      
       if (isColEditMode) {
           propertiesPanel.style.display = 'none';
           return;
       }
+      
       if (selectedBlocks.size === 0) { 
           propertiesPanel.style.display = 'none'; 
-      } else if (selectedBlocks.size === 1) { 
-        propertiesPanel.style.display = 'block'; multiSelectMsg.style.display = 'none'; singleProperties.style.display = 'block'; 
-        let block = Array.from(selectedBlocks)[0]; 
-        propX.value = parseInt(block.style.left || 0); propY.value = parseInt(block.style.top || 0); 
-        propW.value = block.offsetWidth; propH.value = block.offsetHeight; 
-        
-        const type = block.dataset.type; 
-        
-        document.getElementById('media-properties').style.display = (type === 'image' || type === 'gif' || type === 'text') ? 'block' : 'none';
-        document.getElementById('text-props').style.display = (type === 'text') ? 'block' : 'none';
-
-        if (type === 'image' || type === 'gif' || type === 'text') { 
-            document.getElementById('image-props').style.display = (type === 'image') ? 'block' : 'none'; 
-            document.getElementById('gif-props').style.display = (type === 'gif') ? 'block' : 'none'; 
-            if (type === 'image') document.getElementById('image-url').value = block.dataset.src || ''; 
-            if (type === 'gif') document.getElementById('gif-url').value = block.dataset.src || ''; 
-            document.getElementById('prop-href').value = block.dataset.href || ''; 
-        } 
-        
-        if (type === 'text') { 
-            let tEl = block.querySelector('.block-text'); 
-            if (tEl) { 
-                let compStyle = window.getComputedStyle(tEl); 
-                document.getElementById('prop-font-size').value = parseInt(tEl.style.fontSize || compStyle.fontSize) || 14; 
-                document.getElementById('prop-line-height').value = parseInt(tEl.style.lineHeight || compStyle.lineHeight) || 20; 
-                document.getElementById('prop-padding-top').value = parseInt(tEl.style.paddingTop || compStyle.paddingTop) || 10; 
-                document.getElementById('prop-padding-sides').value = parseInt(tEl.style.paddingLeft || compStyle.paddingLeft) || 15; 
-                const colorInput = document.getElementById('inline-color');
-                if (colorInput) colorInput.value = rgbToHex(tEl.style.color || compStyle.color || '#000000');
-            } 
-        }
-      } else { 
+      } else {
           propertiesPanel.style.display = 'block'; 
-          multiSelectMsg.style.display = 'block'; 
-          singleProperties.style.display = 'none'; 
+          
+          let showVerticalAlign = (selectedBlocks.size > 1);
+          document.getElementById('multi-v-align').style.display = showVerticalAlign ? 'flex' : 'none';
+
+          let allSameGroup = true;
+          let anyHasGroup = false;
+          let firstGroupId = null;
+          let blocksArray = Array.from(selectedBlocks);
+          
+          blocksArray.forEach(b => {
+              if (b.dataset.groupId) anyHasGroup = true;
+              if (!firstGroupId && b.dataset.groupId) firstGroupId = b.dataset.groupId;
+              if (!b.dataset.groupId || b.dataset.groupId !== firstGroupId) allSameGroup = false;
+          });
+
+          document.getElementById('btn-group').style.display = (blocksArray.length > 1 && !allSameGroup) ? 'flex' : 'none';
+          document.getElementById('btn-ungroup').style.display = (anyHasGroup) ? 'flex' : 'none';
+
+          if (selectedBlocks.size === 1) { 
+            multiSelectMsg.style.display = 'none'; 
+            singleProperties.style.display = 'block'; 
+            
+            let block = blocksArray[0]; 
+            propX.value = parseInt(block.style.left || 0); 
+            propY.value = parseInt(block.style.top || 0); 
+            propW.value = block.offsetWidth; 
+            propH.value = block.offsetHeight; 
+            
+            const type = block.dataset.type; 
+            
+            document.getElementById('media-properties').style.display = (type === 'image' || type === 'gif' || type === 'text') ? 'block' : 'none';
+            document.getElementById('text-props').style.display = (type === 'text') ? 'block' : 'none';
+
+            if (type === 'image' || type === 'gif' || type === 'text') { 
+                document.getElementById('image-props').style.display = (type === 'image') ? 'block' : 'none'; 
+                document.getElementById('gif-props').style.display = (type === 'gif') ? 'block' : 'none'; 
+                if (type === 'image') document.getElementById('image-url').value = block.dataset.src || ''; 
+                if (type === 'gif') document.getElementById('gif-url').value = block.dataset.src || ''; 
+                document.getElementById('prop-href').value = block.dataset.href || ''; 
+            } 
+            
+            if (type === 'text') { 
+                let tEl = block.querySelector('.block-text'); 
+                if (tEl) { 
+                    let compStyle = window.getComputedStyle(tEl); 
+                    document.getElementById('prop-font-size').value = parseInt(tEl.style.fontSize || compStyle.fontSize) || 14; 
+                    document.getElementById('prop-line-height').value = parseInt(tEl.style.lineHeight || compStyle.lineHeight) || 20; 
+                    document.getElementById('prop-padding-top').value = parseInt(tEl.style.paddingTop || compStyle.paddingTop) || 10; 
+                    document.getElementById('prop-padding-sides').value = parseInt(tEl.style.paddingLeft || compStyle.paddingLeft) || 15; 
+                    const colorInput = document.getElementById('inline-color');
+                    if (colorInput) colorInput.value = rgbToHex(tEl.style.color || compStyle.color || '#000000');
+                } 
+            }
+          } else { 
+              multiSelectMsg.style.display = 'block'; 
+              singleProperties.style.display = 'none'; 
+          }
       } 
     }
 
@@ -2143,7 +2243,9 @@
                 if (item.selected) addToSelection(b);
             }); 
         } 
-        updateCanvasHeight(); updatePropertiesUI(); isRestoring = false; 
+        updateCanvasHeight(); 
+        updatePropertiesUI(); 
+        isRestoring = false; 
     }
     
     function undo() { if (historyIndex > 0) { historyIndex--; loadState(historyArr[historyIndex]); markUnsaved(); } }
@@ -2161,7 +2263,8 @@
       if (newW < 20) newW = 20; if (newH < minH) newH = minH; 
       if (source === 'w') { newX = oldX - (newW - oldW) / 2; propX.value = Math.round(newX); } 
       if (source === 'h') { newY = oldY - (newH - oldH) / 2; propY.value = Math.round(newY); } 
-      if (newW > 850) newW = 850; if (newX + newW > 850) newX = 850 - newW; 
+      if (newW > currentCanvasWidth) newW = currentCanvasWidth; 
+      if (newX + newW > currentCanvasWidth) newX = currentCanvasWidth - newW; 
       if (newX < 0) newX = 0; if (newY < 0) newY = 0; 
       
       block.style.width = newW + 'px'; block.style.height = newH + 'px'; 
@@ -2169,21 +2272,60 @@
       updateCanvasHeight(); 
     }
     
+    function alignBlock(alignment) { 
+        if (selectedBlocks.size === 0) return; 
+        
+        let target = document.getElementById('align-target').value;
+        let blocksArr = Array.from(selectedBlocks);
+        let keyObj = blocksArr[0]; 
+        
+        let mX = Infinity, mY = Infinity, mxX = 0, mxY = 0;
+        
+        if (target === 'selection' && blocksArr.length > 1) {
+            mX = parseInt(keyObj.style.left || 0);
+            mY = parseInt(keyObj.style.top || 0);
+            mxX = mX + keyObj.offsetWidth;
+            mxY = mY + keyObj.offsetHeight;
+        }
+        
+        blocksArr.forEach(block => { 
+            let w = block.offsetWidth; 
+            let h = block.offsetHeight;
+            let l = parseInt(block.style.left || 0);
+            let t = parseInt(block.style.top || 0);
+            
+            let newL = l;
+            let newT = t;
+
+            if (target === 'canvas' || blocksArr.length === 1) {
+                if (alignment === 'left') newL = 0; 
+                else if (alignment === 'center') newL = Math.round((currentCanvasWidth - w) / 2); 
+                else if (alignment === 'right') newL = currentCanvasWidth - w; 
+            } else {
+                if (alignment === 'left') newL = mX;
+                else if (alignment === 'center') newL = mX + (mxX - mX) / 2 - w / 2;
+                else if (alignment === 'right') newL = mxX - w;
+                
+                else if (alignment === 'top') newT = mY;
+                else if (alignment === 'middle') newT = mY + (mxY - mY) / 2 - h / 2;
+                else if (alignment === 'bottom') newT = mxY - h;
+            }
+            
+            block.style.left = Math.round(newL) + 'px';
+            
+            if (alignment === 'top' || alignment === 'middle' || alignment === 'bottom') {
+                block.style.top = Math.round(newT) + 'px';
+            }
+        }); 
+        updatePropertiesUI(); 
+        updateMultiSelectionBoundingBox(); 
+        saveState(); 
+    }
+    
     function updateMediaLink() { 
         if (selectedBlocks.size !== 1) return; 
         Array.from(selectedBlocks)[0].dataset.href = document.getElementById('prop-href').value.trim(); 
         saveState(); 
-    }
-    
-    function alignBlock(alignment) { 
-        if (selectedBlocks.size === 0) return; 
-        selectedBlocks.forEach(block => { 
-            let w = block.offsetWidth; 
-            if (alignment === 'left') block.style.left = '0px'; 
-            else if (alignment === 'center') block.style.left = Math.round((850 - w) / 2) + 'px'; 
-            else if (alignment === 'right') block.style.left = (850 - w) + 'px'; 
-        }); 
-        updatePropertiesUI(); saveState(); 
     }
     
     function updateTextProperties() { 
@@ -2340,7 +2482,7 @@
     }
 
     // ==========================================
-    // FORMATO INTELIGENTE: SELECCIÓN DE PALABRAS O BLOQUE COMPLETO (1 CLIC)
+    // FORMATO INTELIGENTE: SELECCIÓN DE PALABRAS O BLOQUE COMPLETO
     // ==========================================
     document.addEventListener('selectionchange', () => { 
         if (isProgrammaticFormat) return;
@@ -2396,7 +2538,6 @@
       let targetRange = null;
       let targetEditingEl = null;
 
-      // 1. Verificar si hay palabras seleccionadas activamente
       const active = document.activeElement;
       if (active && active.classList.contains('editing') && sel && sel.rangeCount > 0 && !sel.isCollapsed && sel.toString().length > 0) {
         targetRange = sel.getRangeAt(0).cloneRange();
@@ -2413,7 +2554,6 @@
         }
       }
 
-      // CASO A: Hay una selección parcial de palabras (doble clic + pintado de texto)
       if (targetRange && targetEditingEl) {
         isProgrammaticFormat = true;
         const wrap = targetEditingEl.closest('.block-text-wrap');
@@ -2435,7 +2575,6 @@
         }
         isProgrammaticFormat = false;
       } 
-      // CASO B: Solo está seleccionado el bloque (1 clic) o no hay palabras pintadas -> Aplica a todo el bloque
       else if (selectedBlocks.size > 0) {
         selectedBlocks.forEach(block => {
           if (block.dataset.type !== 'text') return;
@@ -2517,7 +2656,8 @@
                   type: b.dataset.type, w: b.offsetWidth, h: b.offsetHeight, 
                   l: parseInt(b.style.left || 0), t: parseInt(b.style.top || 0), 
                   src: b.dataset.src || '', href: b.dataset.href || '', 
-                  html: tEl ? tEl.innerHTML : '', css: tEl ? tEl.style.cssText : '' 
+                  html: tEl ? tEl.innerHTML : '', css: tEl ? tEl.style.cssText : '',
+                  groupId: b.dataset.groupId || ''
               }); 
           }); 
       } 
@@ -2530,7 +2670,7 @@
           let newBlock = addBlock(item.type); 
           newBlock.style.width = item.w + 'px'; 
           newBlock.style.height = item.h + 'px'; 
-          newBlock.style.left = Math.min(item.l + 20, 850 - item.w) + 'px'; 
+          newBlock.style.left = Math.min(item.l + 20, currentCanvasWidth - item.w) + 'px'; 
           newBlock.style.top = (item.t + 20) + 'px'; 
           
           if (item.type === 'image') { 
@@ -2558,6 +2698,11 @@
                   if (wrap) wrap.style.justifyContent = vJustify;
               }
           }
+          
+          if (item.groupId) {
+              newBlock.dataset.groupId = item.groupId + '_copy';
+          }
+          
           addToSelection(newBlock); 
         }); 
         updateCanvasHeight(); saveState(); 
@@ -2590,7 +2735,8 @@
         if (origGroupW === 0) origGroupW = 1; if (origGroupH === 0) origGroupH = 1; 
         
         function onMouseMove(moveEvent) { 
-          let dx = moveEvent.clientX - startX; let dy = moveEvent.clientY - startY; 
+          let dx = (moveEvent.clientX - startX) / currentZoom; 
+          let dy = (moveEvent.clientY - startY) / currentZoom; 
           let newGroupW = origGroupW, newGroupH = origGroupH; 
           let newGroupX = minX, newGroupY = minY; 
           
@@ -2610,7 +2756,7 @@
               let finalW = Math.max(20, Math.round(item.w * scaleX)); 
               let finalH = Math.max(minH, Math.round(item.h * scaleY)); 
               
-              if (finalL < 0) finalL = 0; if (finalL + finalW > 850) finalW = 850 - finalL; 
+              if (finalL < 0) finalL = 0; if (finalL + finalW > currentCanvasWidth) finalW = currentCanvasWidth - finalL; 
               
               item.block.style.left = finalL + 'px'; item.block.style.top = finalT + 'px'; 
               item.block.style.width = finalW + 'px'; item.block.style.height = finalH + 'px'; 
@@ -2634,7 +2780,8 @@
       if (!e.shiftKey) clearSelection(); 
       
       let rect = canvas.getBoundingClientRect(); 
-      let startX = e.clientX - rect.left, startY = e.clientY - rect.top; 
+      let startX = (e.clientX - rect.left) / currentZoom;
+      let startY = (e.clientY - rect.top) / currentZoom; 
       
       selectionBox.style.display = 'block'; 
       selectionBox.style.left = startX + 'px'; 
@@ -2643,7 +2790,8 @@
       selectionBox.style.height = '0px'; 
       
       function onMouseMoveBox(moveEvent) { 
-        let currentX = moveEvent.clientX - rect.left, currentY = moveEvent.clientY - rect.top; 
+        let currentX = (moveEvent.clientX - rect.left) / currentZoom;
+        let currentY = (moveEvent.clientY - rect.top) / currentZoom; 
         let left = Math.min(startX, currentX), top = Math.min(startY, currentY); 
         let width = Math.abs(currentX - startX), height = Math.abs(currentY - startY); 
         
@@ -2738,6 +2886,7 @@
           block.style.height = restoreData.h; 
           if(restoreData.src) block.dataset.src = restoreData.src; 
           if(restoreData.href) block.dataset.href = restoreData.href; 
+          if(restoreData.groupId) block.dataset.groupId = restoreData.groupId; 
       } else { 
           block.style.left = '0px'; 
           block.style.top = getLowestPoint() + 'px'; 
@@ -2851,7 +3000,8 @@
               
               function onMouseMove(moveEvent) { 
                   let snapThreshold = moveEvent.altKey ? 0 : 10; 
-                  let dx = moveEvent.clientX - startX, dy = moveEvent.clientY - startY; 
+                  let dx = (moveEvent.clientX - startX) / currentZoom; 
+                  let dy = (moveEvent.clientY - startY) / currentZoom; 
                   let newW = startW, newH = startH, newL = startL, newT = startT; 
                   let otherBlocks = Array.from(document.querySelectorAll('.block')).filter(b => b !== block); 
                   
@@ -2873,7 +3023,7 @@
                   
                   if (newW < 20) { if (pos.includes('w')) newL = startL + startW - 20; newW = 20; } 
                   if (newH < minH) { if (pos.includes('n')) newT = startT + startH - minH; newH = minH; } 
-                  if (newL < 0) { newW += newL; newL = 0; } if (newL + newW > 850) newW = 850 - newL; 
+                  if (newL < 0) { newW += newL; newL = 0; } if (newL + newW > currentCanvasWidth) newW = currentCanvasWidth - newL; 
                   if (newT < 0) { newH += newT; newT = 0; } 
                   
                   let testRect = { left: newL, top: newT, right: newL + newW, bottom: newT + newH }; let collision = false; 
@@ -2900,7 +3050,7 @@
           block.appendChild(handle); 
       }); 
       
-      // ARRASTRE LIBRE CON UMBRAL DE 5PX (PERMITE CLIC Y DOBLE CLIC LIMPIOS) + APERTURA EN INTERSECCIÓN
+      // ARRASTRE LIBRE CON UMBRAL DE 5PX E IMANES X / Y INDEPENDIENTES
       block.addEventListener('mousedown', function(e) { 
         if (isColEditMode) return;
         isUsingColorPicker = false;
@@ -2998,8 +3148,8 @@
           }
 
           function onMouseMove(moveEvent) { 
-            let dx = moveEvent.clientX - startX;
-            let dy = moveEvent.clientY - startY; 
+            let dx = (moveEvent.clientX - startX) / currentZoom;
+            let dy = (moveEvent.clientY - startY) / currentZoom; 
 
             if (!isDraggingActive) {
               if (Math.hypot(dx, dy) < 5) return;
@@ -3030,7 +3180,7 @@
             }
 
             if (newX < 0) newX = 0;
-            if (newX + groupW > 850) newX = 850 - groupW;
+            if (newX + groupW > currentCanvasWidth) newX = currentCanvasWidth - groupW;
             if (newY < 0) newY = 0; 
 
             let deltaX = newX - minGX;
@@ -3296,7 +3446,7 @@
       const scale = 2;
       const totalHeight = Math.max(100, ...blocks.map(b => b.y + b.h));
       const masterCanvas = document.createElement('canvas');
-      masterCanvas.width = 850 * scale;
+      masterCanvas.width = currentCanvasWidth * scale;
       masterCanvas.height = totalHeight * scale;
       const masterCtx = masterCanvas.getContext('2d');
       
@@ -3383,17 +3533,17 @@
         }
       }
 
-      let htmlTable = `<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#ffffff" style="width:100%; max-width:850px; background-color:#ffffff; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; margin:0 auto;">`;
+      let htmlTable = `<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#ffffff" style="width:100%; max-width:${currentCanvasWidth}px; background-color:#ffffff; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; margin:0 auto;">`;
 
       let curY = 0;
 
       for (const row of rawRows) {
         if (row.top > curY) {
           const gapH = row.top - curY;
-          const gapB64 = sliceMasterCanvas(masterCanvas, scale, 0, curY, 850, gapH);
+          const gapB64 = sliceMasterCanvas(masterCanvas, scale, 0, curY, currentCanvasWidth, gapH);
           const gapSrc = registerInlineImage(gapB64);
-          const gapStyle = `display:block; width:100%; max-width:850px; height:auto; border:0; outline:none; text-decoration:none; margin:0; padding:0;`;
-          htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#ffffff" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#ffffff; font-size:0px; line-height:0px; mso-line-height-rule:exactly;"><p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${gapSrc}" width="850" style="${gapStyle}" alt="" /></p></td></tr>`;
+          const gapStyle = `display:block; width:100%; max-width:${currentCanvasWidth}px; height:auto; border:0; outline:none; text-decoration:none; margin:0; padding:0;`;
+          htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#ffffff" style="width:100%; max-width:${currentCanvasWidth}px; padding:0; margin:0; background-color:#ffffff; font-size:0px; line-height:0px; mso-line-height-rule:exactly;"><p class="MsoNormal" style="margin:0cm; margin-bottom:0pt; padding:0; font-size:0px; line-height:0px;"><img src="${gapSrc}" width="${currentCanvasWidth}" style="${gapStyle}" alt="" /></p></td></tr>`;
         }
 
         const rowH = Math.max(1, row.bottom - row.top);
@@ -3402,7 +3552,7 @@
         let sortedByX = [...row.blocks].sort((a, b) => a.x - b.x || a.y - b.y);
         for (const b of sortedByX) {
           let bLeft = Math.max(0, b.x);
-          let bRight = Math.min(850, b.x + b.w);
+          let bRight = Math.min(currentCanvasWidth, b.x + b.w);
           if (bRight <= bLeft) continue;
 
           let placed = false;
@@ -3423,18 +3573,18 @@
         for (const cg of colGroups) {
           let startX = Math.max(xCursor, cg.left);
           if (startX > xCursor) columns.push({ x: xCursor, w: startX - xCursor, blocks: [] });
-          let colW = Math.min(850, cg.right) - startX;
+          let colW = Math.min(currentCanvasWidth, cg.right) - startX;
           if (colW > 0) {
             columns.push({ x: startX, w: colW, blocks: cg.blocks });
             xCursor = startX + colW;
           }
         }
-        if (xCursor < 850) columns.push({ x: xCursor, w: 850 - xCursor, blocks: [] });
+        if (xCursor < currentCanvasWidth) columns.push({ x: xCursor, w: currentCanvasWidth - xCursor, blocks: [] });
 
-        htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#ffffff" style="width:100%; max-width:850px; padding:0; margin:0; background-color:#ffffff; font-size:0px; line-height:0px;"><table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:100%; max-width:850px; table-layout:fixed; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; background-color:#ffffff;"><tr style="font-size:0px; line-height:0px;">`;
+        htmlTable += `<tr style="font-size:0px; line-height:0px;"><td valign="top" bgcolor="#ffffff" style="width:100%; max-width:${currentCanvasWidth}px; padding:0; margin:0; background-color:#ffffff; font-size:0px; line-height:0px;"><table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:100%; max-width:${currentCanvasWidth}px; table-layout:fixed; border-collapse:collapse; border-spacing:0; mso-table-lspace:0pt; mso-table-rspace:0pt; background-color:#ffffff;"><tr style="font-size:0px; line-height:0px;">`;
 
         for (const col of columns) {
-          let pctW = ((col.w / 850) * 100).toFixed(4) + '%';
+          let pctW = ((col.w / currentCanvasWidth) * 100).toFixed(4) + '%';
           let pxW = Math.max(1, Math.round(col.w));
 
           htmlTable += `<td width="${pctW}" valign="top" align="center" bgcolor="#ffffff" style="width:${pctW}; padding:0; margin:0; background-color:#ffffff; font-size:0px; line-height:0px; mso-line-height-rule:exactly;">`;
@@ -3573,7 +3723,7 @@
 <body bgcolor="#ffffff" style="margin:0; padding:0; background-color:#ffffff; font-family: Arial, Helvetica, sans-serif; width: 100%;">
   <center style="width:100%; background-color:#ffffff;">
     <!--[if mso]>
-    <table width="850" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#ffffff"><tr><td width="850" align="center" valign="top" bgcolor="#ffffff">
+    <table width="${currentCanvasWidth}" border="0" cellpadding="0" cellspacing="0" align="center" bgcolor="#ffffff"><tr><td width="${currentCanvasWidth}" align="center" valign="top" bgcolor="#ffffff">
     <![endif]-->
     ${htmlTable}
     <!--[if mso]>
@@ -3673,6 +3823,6 @@
         showSalsaToast("Error inesperado", "Ocurrió un problema al armar el archivo EML.", "error");
       }
     }
-  </script>
+</script>
 </body>
 </html>
