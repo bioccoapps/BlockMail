@@ -83,17 +83,25 @@ autoUpdater.on('update-available', (info) => {
   mainWindow.webContents.send('update-available', info);
 });
 
+// NUEVO: Le avisa al HTML cuánto porcentaje va descargando
+autoUpdater.on('download-progress', (progressObj) => {
+  mainWindow.webContents.send('update-progress', progressObj.percent);
+});
+
 autoUpdater.on('update-downloaded', (info) => {
   mainWindow.webContents.send('update-downloaded', info);
 });
 
-// 🔥 NUEVO: Atrapamos errores silenciosos
+// NUEVO: Atrapamos errores silenciosos
 autoUpdater.on('error', (err) => {
   mainWindow.webContents.send('update-error', err.message);
 });
 
+// NUEVO: Instalación silenciosa al reiniciar
 ipcMain.on('restart-app', () => {
-  autoUpdater.quitAndInstall();
+  // El primer 'true' oculta la pantalla de instalación de Windows (isSilent)
+  // El segundo 'true' fuerza a que la app se vuelva a abrir al terminar (isForceRunAfter)
+  autoUpdater.quitAndInstall(true, true);
 });
 
 // ==========================================

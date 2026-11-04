@@ -602,6 +602,19 @@
     .settings-row label { font-size: 13.5px; color: var(--md-text); font-weight: 500; display: flex; align-items: center; gap: 8px; }
     .settings-input { width: 90px; background: var(--md-surface); border: 1px solid var(--md-border); border-radius: 6px; color: var(--md-text); padding: 7px 10px; text-align: right; font-size: 13.5px; font-family: inherit; outline: none; }
     .settings-input:focus { border-color: var(--md-primary); }
+
+/* BARRA DE PROGRESO Y NOTAS DEL PARCHE (ESTILO PROFESIONAL) */
+    .salsa-progress-bg { width: 100%; height: 6px; background: var(--md-surface-3); border-radius: 4px; overflow: hidden; margin: 15px 0 5px 0; }
+    .salsa-progress-bar { width: 0%; height: 100%; background: var(--md-primary); transition: width 0.2s linear; box-shadow: 0 0 10px var(--md-primary); }
+    
+    .patch-notes { text-align: left; background: var(--md-surface-2); border: 1px solid var(--md-border); border-radius: 8px; padding: 18px; font-size: 13px; color: var(--md-text-muted); max-height: 260px; overflow-y: auto; margin-top: 15px; margin-bottom: 20px; line-height: 1.55; display: none; }
+    .patch-notes::-webkit-scrollbar { width: 8px; }
+    .patch-notes::-webkit-scrollbar-thumb { background: var(--md-border); border-radius: 4px; }
+    .patch-notes h3 { color: var(--md-text); margin-top: 0; font-size: 15px; margin-bottom: 12px; border-bottom: 1px solid var(--md-border); padding-bottom: 8px; }
+    .patch-notes h4 { color: var(--md-primary); margin: 16px 0 6px 0; font-size: 13.5px; font-weight: 700; }
+    .patch-notes p { margin-top: 0; margin-bottom: 10px; }
+    .patch-notes p:last-child { margin-bottom: 0; }
+    .patch-notes b { color: var(--md-text); }
   </style>
 </head>
 <body data-theme="dark" onclick="closeDropdowns()">
@@ -737,15 +750,38 @@
     </div>
   </div>
 
-  <!-- MODAL DE ACTUALIZACIÓN -->
+<!-- MODAL DE ACTUALIZACIÓN CON BARRA DE PROGRESO Y NOTAS DEL PARCHE -->
   <div id="update-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-box">
+    <div class="modal-box" style="max-width: 580px;">
       <div id="update-spinner" class="spinner"></div>
-      <div id="update-title" class="modal-title">¡Nueva actualización!</div>
-      <div id="update-text" class="modal-text">Descargando...</div>
-      <div id="update-details" class="update-details" style="display: none;"></div>
-      <button id="update-btn" class="tool-btn" style="width: 100%; justify-content: center; background-color: #1FAF38; border-color: #158a29; color:#fff; font-weight: bold; padding: 15px; display: none;" onclick="restartApp()"><span class="ms-icon">system_update_alt</span> Instalar y Reiniciar</button>
-      <button id="update-later-btn" class="tool-btn" style="width: 100%; justify-content: center; font-weight: bold; padding: 10px; margin-top: 10px; display: none;" onclick="document.getElementById('update-modal').style.display='none';">Más tarde</button>
+      <div id="update-title" class="modal-title">¡Nueva actualización encontrada!</div>
+      <div id="update-text" class="modal-text">Conectando con el servidor...</div>
+      
+      <!-- BARRA DE CARGA PROPIA -->
+      <div id="update-progress-container" class="salsa-progress-bg" style="display: none;">
+        <div id="update-progress-bar" class="salsa-progress-bar"></div>
+      </div>
+      
+      <!-- NOTAS DEL PARCHE PROFESIONALES -->
+      <div id="patch-notes-container" class="patch-notes">
+        <h3>Notas de la Versión: BlockMail v2.2.0</h3>
+        
+        <h4>✨ Nuevas Características</h4>
+        <p><b>Agrupación de Objetos:</b> Se integró un nuevo sistema de grupos en el panel de propiedades. Ahora es posible seleccionar múltiples bloques (imágenes, textos, espaciadores) y unificarlos. Al agruparlos, los elementos se comportan como una entidad única, permitiendo moverlos y redimensionarlos en conjunto sin perder la proporción ni la disposición interna.</p>
+        <p><b>Mesa de Trabajo Dinámica:</b> Para adaptarse a los distintos estándares de visualización de correo corporativo, el lienzo principal ya no está limitado a 850px. Desde el menú de Tema y Ajustes, el ancho de la mesa de trabajo ahora es completamente variable y configurable (soportando resoluciones desde 400px hasta 1200px). El motor de exportación HTML recalcula automáticamente las proporciones en base al nuevo tamaño.</p>
+        <p><b>Controles de Zoom en el Lienzo:</b> Se añadió un controlador de escala visual en la barra superior. Los usuarios ahora pueden acercar el lienzo para realizar ajustes milimétricos en los márgenes de los textos, o alejar la vista para evaluar la composición general del correo antes de su exportación.</p>
+        
+        <h4>🛠️ Mejoras y Optimizaciones del Flujo de Trabajo</h4>
+        <p><b>Smart Guides Mejoradas (Imanes Independientes):</b> El motor de colisiones y snapping fue reescrito para evaluar los ejes X e Y por separado. Esto elimina los saltos bruscos no deseados al acercar bloques: ahora es posible arrastrar un elemento para alinear su borde vertical con otro bloque cercano, permitiendo que se deslice suavemente hacia arriba o hacia abajo sin forzar una conexión horizontal hasta que realmente se acerque al borde correspondiente.</p>
+        <p><b>Alineación a Objeto Clave:</b> El panel de Propiedades ahora cuenta con un selector de contexto de alineación. Al cambiar de "Lienzo" a "Objeto Principal", el motor respeta el primer elemento seleccionado como ancla estática. Los demás bloques seleccionados se alinearán a este (añadiendo nuevas opciones de alineación vertical: Arriba, Medio, Abajo) replicando el comportamiento estándar de la suite de Adobe.</p>
+      </div>
+
+      <button id="update-btn" class="tool-btn" style="width: 100%; justify-content: center; background-color: #1FAF38; border-color: #158a29; color:#fff; font-weight: bold; padding: 15px; display: none;" onclick="restartApp()">
+        <span class="ms-icon">system_update_alt</span> Instalar actualización
+      </button>
+      <button id="update-later-btn" class="tool-btn" style="width: 100%; justify-content: center; font-weight: bold; padding: 10px; margin-top: 10px; display: none;" onclick="document.getElementById('update-modal').style.display='none';">
+        Instalar más tarde
+      </button>
     </div>
   </div>
 
@@ -1168,25 +1204,31 @@
          }
       });
 
-      ipcRenderer.on('update-available', (event, info) => {
+ipcRenderer.on('update-available', (event, info) => {
          document.getElementById('update-modal').style.display = 'flex';
-         document.getElementById('update-title').innerText = "¡Nueva actualización!";
-         document.getElementById('update-text').innerText = "Descargando la última versión...";
-         document.getElementById('update-spinner').style.display = 'block';
+         document.getElementById('update-title').innerText = "Descargando actualización...";
+         document.getElementById('update-text').innerText = "Iniciando descarga...";
+         document.getElementById('update-spinner').style.display = 'none'; // Escondemos el spinner viejo
+         document.getElementById('update-progress-container').style.display = 'block'; // Mostramos la barra
+         document.getElementById('update-progress-bar').style.width = '0%';
+         document.getElementById('patch-notes-container').style.display = 'none';
          document.getElementById('update-btn').style.display = 'none';
          document.getElementById('update-later-btn').style.display = 'none';
       });
 
+      // NUEVO: Escucha el porcentaje de descarga y mueve la barra
+      ipcRenderer.on('update-progress', (event, percent) => {
+         document.getElementById('update-progress-bar').style.width = percent + '%';
+         document.getElementById('update-text').innerText = "Descargando... " + Math.floor(percent) + "%";
+      });
+
       ipcRenderer.on('update-downloaded', (event, info) => {
          document.getElementById('update-title').innerText = "¡Actualización lista!";
-         document.getElementById('update-text').innerText = "Se descargó correctamente. Reiniciá para aplicar los cambios.";
-         document.getElementById('update-spinner').style.display = 'none';
+         document.getElementById('update-text').innerText = "La nueva versión se descargó en segundo plano y está lista para instalarse.";
+         document.getElementById('update-progress-container').style.display = 'none'; // Ocultamos la barra
+         document.getElementById('patch-notes-container').style.display = 'block'; // Mostramos las notas del parche!
          document.getElementById('update-btn').style.display = 'flex';
          document.getElementById('update-later-btn').style.display = 'flex';
-         if (info && info.version) {
-            document.getElementById('update-details').style.display = 'block';
-            document.getElementById('update-details').innerText = "Nueva versión: " + info.version;
-         }
       });
 
       ipcRenderer.on('update-error', (event, err) => {
@@ -1195,12 +1237,12 @@
          if (modal && modal.style.display === 'flex') {
              document.getElementById('update-title').innerText = "Error en la actualización";
              document.getElementById('update-text').innerText = "Falló la descarga. Revisá tu internet o contactá al soporte técnico.";
+             document.getElementById('update-progress-container').style.display = 'none';
              document.getElementById('update-spinner').style.display = 'none';
              document.getElementById('update-later-btn').style.display = 'flex';
-             document.getElementById('update-later-btn').innerText = "Entendido";
+             document.getElementById('update-later-btn').innerText = "Cerrar";
          }
       });
-    }
 
     function restartApp() {
       if (ipcRenderer) ipcRenderer.send('restart-app');
