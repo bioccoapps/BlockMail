@@ -1166,43 +1166,84 @@
     
     let userDataPath = '';
 
-    if (ipcRenderer && fs && path) {
-      ipcRenderer.invoke('get-app-version').then(version => {
-         const vStr = "v" + version;
-         if(document.getElementById('app-version')) document.getElementById('app-version').innerText = vStr;
-         if(document.getElementById('ws-app-version')) document.getElementById('ws-app-version').innerText = vStr;
-      }).catch(e => console.log(e));
+if (ipcRenderer && fs && path) {
+          ipcRenderer.invoke('get-app-version').then(version => {
+             const vStr = "v" + version;
+             if(document.getElementById('app-version')) document.getElementById('app-version').innerText = vStr;
+             if(document.getElementById('ws-app-version')) document.getElementById('ws-app-version').innerText = vStr;
+          }).catch(e => console.log(e));
 
-      ipcRenderer.invoke('get-user-data-path').then(p => {
-         userDataPath = p;
-         const thumbsDir = path.join(userDataPath, 'thumbnails');
-         if (!fs.existsSync(thumbsDir)) {
-           fs.mkdirSync(thumbsDir, { recursive: true });
-         }
-         renderRecents();
-      }).catch(e => console.log(e));
-      
-      ipcRenderer.on('open-external-file', (event, filePath) => {
-         try {
-            const content = fs.readFileSync(filePath, 'utf-8');
-            loadProjectIntoTab(filePath, JSON.parse(content));
-         } catch(e) { 
-            showSalsaToast("Error al abrir", "No se pudo leer el archivo del proyecto.", "error");
-         }
-      });
+          ipcRenderer.invoke('get-user-data-path').then(p => {
+             userDataPath = p;
+             const thumbsDir = path.join(userDataPath, 'thumbnails');
+             if (!fs.existsSync(thumbsDir)) {
+               fs.mkdirSync(thumbsDir, { recursive: true });
+             }
+             renderRecents();
+          }).catch(e => console.log(e));
+          
+          ipcRenderer.on('open-external-file', (event, filePath) => {
+             try {
+                const content = fs.readFileSync(filePath, 'utf-8');
+                loadProjectIntoTab(filePath, JSON.parse(content));
+             } catch(e) { 
+                showSalsaToast("Error al abrir", "No se pudo leer el archivo del proyecto.", "error");
+             }
+          });
 
-      ipcRenderer.on('request-app-close', () => {
-         try {
-             if (projects.some(p => p.unsaved)) {
-                 document.getElementById('close-tab-modal').style.display = 'flex';
-                 isAppClosing = true;
-             } else {
+          ipcRenderer.on('request-app-close', () => {
+             try {
+                 if (projects.some(p => p.unsaved)) {
+                     document.getElementById('close-tab-modal').style.display = 'flex';
+                     isAppClosing = true;
+                 } else {
+                     ipcRenderer.send('force-close-app');
+                 }
+             } catch(err) {
                  ipcRenderer.send('force-close-app');
              }
-         } catch(err) {
-             ipcRenderer.send('force-close-app');
-         }
-      });
+          });
+
+          // AQUI EMPIEZA LO DEL UPDATER Y LA BARRA
+          ipcRenderer.on('update-available', (event, info) => {
+             document.getElementById('update-modal').style.display = 'flex';
+             document.getElementById('update-title').innerText = "Descargando actualización...";
+             document.getElementById('update-text').innerText = "Iniciando descarga...";
+             document.getElementById('update-spinner').style.display = 'none';
+             document.getElementById('update-progress-container').style.display = 'block';
+             document.getElementById('update-progress-bar').style.width = '0%';
+             document.getElementById('patch-notes-container').style.display = 'none';
+             document.getElementById('update-btn').style.display = 'none';
+             document.getElementById('update-later-btn').style.display = 'none';
+          });
+
+          ipcRenderer.on('update-progress', (event, percent) => {
+             document.getElementById('update-progress-bar').style.width = percent + '%';
+             document.getElementById('update-text').innerText = "Descargando... " + Math.floor(percent) + "%";
+          });
+
+          ipcRenderer.on('update-downloaded', (event, info) => {
+             document.getElementById('update-title').innerText = "¡Actualización lista!";
+             document.getElementById('update-text').innerText = "La nueva versión se descargó en segundo plano y está lista para instalarse.";
+             document.getElementById('update-progress-container').style.display = 'none';
+             document.getElementById('patch-notes-container').style.display = 'block';
+             document.getElementById('update-btn').style.display = 'flex';
+             document.getElementById('update-later-btn').style.display = 'flex';
+          });
+
+          ipcRenderer.on('update-error', (event, err) => {
+             console.error("Error del actualizador:", err);
+             const modal = document.getElementById('update-modal');
+             if (modal && modal.style.display === 'flex') {
+                 document.getElementById('update-title').innerText = "Error en la actualización";
+                 document.getElementById('update-text').innerText = "Falló la descarga. Revisá tu internet o contactá al soporte técnico.";
+                 document.getElementById('update-progress-container').style.display = 'none';
+                 document.getElementById('update-spinner').style.display = 'none';
+                 document.getElementById('update-later-btn').style.display = 'flex';
+                 document.getElementById('update-later-btn').innerText = "Cerrar";
+             }
+          });
+        } // <-- ESTA ES LA LLAVE QUE SEGURAMENTE SE HABÍA BORRADO
 
 ipcRenderer.on('update-available', (event, info) => {
          document.getElementById('update-modal').style.display = 'flex';
